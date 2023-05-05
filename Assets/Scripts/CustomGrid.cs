@@ -1,10 +1,18 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-public class Grid3D : MonoBehaviour
+public class CustomGrid : MonoBehaviour
 {
-    [SerializeField] private float size = 10.0f;
-    [SerializeField] private float distance = 1.0f;
-    [SerializeField] private Vector3[] points;
+    [Header("Drawing:")]
+    public bool draw = false;
+    public bool drawLines = false;
+    public bool drawDiscs = false;
+    public float discSize = .1f;
+
+    [Header("Dimensions:")]
+    public float size = 10.0f;
+    public float distance = 1.0f;
+    public Vector3[] points;
 
     private int gridSize;
     private int pointIndex = 0;
@@ -38,14 +46,21 @@ public class Grid3D : MonoBehaviour
             }
         }
     }
-
-    public Vector3[] GetPoints()
+    
+    public Vector3[] GetOuterWallPoints()
     {
-        return points;
-    }
+        List<Vector3> outerPoints = new List<Vector3>();
 
-    public float GetDistance()
-    {
-        return distance;
+        for (int i = 0; i < points.Length; i++)
+        {
+            if (points[i].x == size - distance ||
+                points[i].y == size - distance ||
+                points[i].z == size - distance)
+            {
+                outerPoints.Add(points[i]);
+            }
+        }
+
+        return outerPoints.ToArray();
     }
 }

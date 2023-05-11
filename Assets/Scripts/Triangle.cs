@@ -21,7 +21,7 @@ struct Triangle
         Ray ray = new Ray(start, dir);
 
         if (plane.Raycast(ray, out dis))
-            doesIntersect = TriangleCollides(Vec3.ToVec3(ray.GetPoint(dis)));
+            doesIntersect = TriangleCollides(ray.GetPoint(dis));
 
         return doesIntersect;
     }

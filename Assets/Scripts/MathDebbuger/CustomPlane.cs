@@ -1,23 +1,37 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using CustomMath;
 using UnityEngine;
 
 public struct CustomPlane
 {
-    public Vec3 normal;
-    public float distance;
+    private Vec3 eNormal;
+    private float eDistance;
+    
+    public Vec3 normal
+    {
+        get => this.eNormal;
+        set => this.eNormal = value;
+    }
 
+    public float distance
+    {
+        get => this.eDistance;
+        set => this.eDistance = value;
+    }
+    
     public CustomPlane(Vec3 inNormal, Vec3 inPoint)
     {
-        normal = inNormal.normalized;
-        distance = -Vec3.Dot(inNormal, inPoint);
+        eNormal = inNormal.normalized;
+        eDistance = -Vec3.Dot(inNormal, inPoint);
     }
 
     public CustomPlane(Vec3 a, Vec3 b, Vec3 c)
     {
-        normal = Vec3.Normalize(Vec3.Cross(b - a, c - a));
-        distance = -Vec3.Dot(normal, a);
+        eNormal = Vec3.Normalize(Vec3.Cross(b - a, c - a));
+        eDistance = -Vec3.Dot(eNormal, a);
     }
 
     public void SetNormalAndPosition(Vec3 inNormal, Vec3 inPoint)
@@ -42,7 +56,7 @@ public struct CustomPlane
     {
         return Vec3.Dot(normal, point) + distance;
     }
-    
+
     public bool GetSide(Vec3 point)
     {
         return GetDistanceToPoint(point) > 0;
@@ -80,7 +94,8 @@ public struct CustomPlane
             enter = 0.0f;
             return false;
         }
+
         enter = num / a;
-        return (double) enter > 0.0;
+        return (double)enter > 0.0;
     }
 }

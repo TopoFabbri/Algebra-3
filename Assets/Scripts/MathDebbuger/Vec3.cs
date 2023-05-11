@@ -194,6 +194,16 @@ namespace CustomMath
             return new Vector2(v2.x, v2.y);
         }
 
+        public static implicit operator Vec3(Vector3 v3)
+        {
+            return new Vec3(v3.x, v3.y, v3.z);
+        }
+
+        public static implicit operator Vec3(Vector2 v3)
+        {
+            return new Vec3(v3.x, v3.y, 0f);
+        }
+
         #endregion
 
         #region Functions
@@ -352,21 +362,6 @@ namespace CustomMath
                 y = 0f;
                 z = 0f;
             }
-        }
-
-        public static Vec3 ToVec3(Vector3 vector3)
-        {
-            return new Vec3(vector3);
-        }
-
-        public static Vec3[] ToVec3(Vector3[] vector3s)
-        {
-            Vec3[] vec3s = new Vec3[vector3s.Length];
-
-            for (var i = 0; i < vec3s.Length; i++)
-                vec3s[i] = ToVec3(vector3s[i]);
-
-            return vec3s;
         }
         
         #endregion

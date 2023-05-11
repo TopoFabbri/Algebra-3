@@ -12,7 +12,7 @@ public class CustomMeshCollider : MonoBehaviour
     public List<Vec3> pointsInMesh = new List<Vec3>();
 
     private int[] tris;
-    private Vec3[] vertices;
+    private Mesh mesh;
     private List<CustomPlane> faces = new List<CustomPlane>();
     private List<Triangle> triangles = new List<Triangle>();
     private Color trisColor = Color.blue;
@@ -24,9 +24,8 @@ public class CustomMeshCollider : MonoBehaviour
     private void OnValidate()
     {
         faces = new List<CustomPlane>();
-        Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
+        mesh = GetComponent<MeshFilter>().sharedMesh;
         tris = mesh.triangles;
-        vertices = Vec3.ToVec3(mesh.vertices);
         prevPos = Vec3.Zero;
         grid = FindObjectOfType<CustomGrid>();
         renderer = GetComponent<MeshRenderer>();
@@ -34,9 +33,9 @@ public class CustomMeshCollider : MonoBehaviour
 
     private void Update()
     {
-        if (transform.position != prevPos)
+        if (!transform.position.Equals(prevPos))
         {
-            prevPos = Vec3.ToVec3(transform.position);
+            prevPos = transform.position;
             PositionUpdated();
         }
 
@@ -51,7 +50,7 @@ public class CustomMeshCollider : MonoBehaviour
     {
         for (int i = 0; i < tris.Length; i += 3)
         {
-            Vec3[] verts = { vertices[tris[i]], vertices[tris[i + 1]], vertices[tris[i + 2]] };
+            Vec3[] verts = { mesh.vertices[tris[i]], mesh.vertices[tris[i + 1]], mesh.vertices[tris[i + 2]] };
             Debug.DrawLine(transform.TransformPoint(verts[0]), transform.TransformPoint(verts[1]), trisColor);
             Debug.DrawLine(transform.TransformPoint(verts[1]), transform.TransformPoint(verts[2]), trisColor);
         }
@@ -72,14 +71,14 @@ public class CustomMeshCollider : MonoBehaviour
         for (int i = 0; i < tris.Length; i += 3)
         {
             Vec3[] verts = new Vec3[3];
-            verts[0] = Vec3.ToVec3(transform.TransformPoint(vertices[tris[i]]));
-            verts[1] = Vec3.ToVec3(transform.TransformPoint(vertices[tris[i + 1]]));
-            verts[2] = Vec3.ToVec3(transform.TransformPoint(vertices[tris[i + 2]]));
+            verts[0] = transform.TransformPoint(mesh.vertices[tris[i]]);
+            verts[1] = transform.TransformPoint(mesh.vertices[tris[i + 1]]);
+            verts[2] = transform.TransformPoint(mesh.vertices[tris[i + 2]]);
 
             CustomPlane plane = new CustomPlane(
-                Vec3.ToVec3(verts[0]),
-                Vec3.ToVec3(verts[1]),
-                Vec3.ToVec3(verts[2])
+                verts[0],
+                verts[1],
+                verts[2]
             );
 
             faces.Add(plane);
@@ -100,9 +99,9 @@ public class CustomMeshCollider : MonoBehaviour
             {
                 for (int k = 0; k < grid.points.GetLength(2); k++)
                 {
-                    float dis = Vec3.Distance(grid.points[i, j, k], Vec3.ToVec3(transform.position));
+                    float dis = Vec3.Distance(grid.points[i, j, k], transform.position);
                     float closestDis = Vec3.Distance(grid.points[closestI, closestJ, closestK],
-                        Vec3.ToVec3(transform.position));
+                        transform.position);
 
                     if (dis < closestDis)
                     {
@@ -182,11 +181,11 @@ public class CustomMeshCollider : MonoBehaviour
         foreach (var face in faces)
         {
             var position = transform.position;
-            Vec3 faceCenter = face.ClosestPointOnPlane(Vec3.ToVec3(position));
+            Vec3 faceCenter = face.ClosestPointOnPlane(position);
 
             Debug.DrawLine(faceCenter, faceCenter + face.normal * .2f, trisColor);
 
-            if (!face.GetSide(Vec3.ToVec3(transform.position)))
+            if (!face.GetSide(transform.position))
                 face.Flip();
         }
     }

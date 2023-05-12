@@ -8,35 +8,39 @@ public class CustomMeshCollider : MonoBehaviour
 {
     [Header("Drawing:")] [SerializeField] private bool drawTris = false;
     [SerializeField] private bool drawNormals = false;
+    [SerializeField]private Mesh mesh;
     
     public List<Vec3> pointsInMesh = new List<Vec3>();
 
     private int[] tris;
-    private Mesh mesh;
     private List<CustomPlane> faces = new List<CustomPlane>();
     private List<Triangle> triangles = new List<Triangle>();
     private Color trisColor = Color.blue;
     private CustomGrid grid;
     private MeshRenderer renderer;
 
-    private Vec3 prevPos;
+    private void Start()
+    {
+        TransformChanged();
+    }
 
-    private void OnValidate()
+    private void TransformChanged()
     {
         faces = new List<CustomPlane>();
         mesh = GetComponent<MeshFilter>().sharedMesh;
-        tris = mesh.triangles;
-        prevPos = Vec3.Zero;
         grid = FindObjectOfType<CustomGrid>();
         renderer = GetComponent<MeshRenderer>();
+        tris = mesh.triangles;
+        
+        MakeTrianglesList();
+        MakeGridpointsInMesh();
     }
 
     private void Update()
     {
-        if (!transform.position.Equals(prevPos))
+        if (transform.hasChanged)
         {
-            prevPos = transform.position;
-            PositionUpdated();
+            TransformChanged();
         }
 
         if (drawNormals)
@@ -54,13 +58,6 @@ public class CustomMeshCollider : MonoBehaviour
             Debug.DrawLine(transform.TransformPoint(verts[0]), transform.TransformPoint(verts[1]), trisColor);
             Debug.DrawLine(transform.TransformPoint(verts[1]), transform.TransformPoint(verts[2]), trisColor);
         }
-    }
-
-    private void PositionUpdated()
-    {
-        MakeTrianglesList();
-
-        MakeGridpointsInMesh();
     }
 
     void MakeTrianglesList()

@@ -6,12 +6,12 @@ using UnityEngine;
 
 public class CollisionManager : MonoBehaviour
 {
-    private List<CustomMeshCollider> meshColliders = new List<CustomMeshCollider>();
+    private List<CustomMeshCollider> meshColliders = new();
 
-    private void OnValidate()
+    private void Start()
     {
         meshColliders.Clear();
-        meshColliders = GameObject.FindObjectsOfType<CustomMeshCollider>().ToList();
+        meshColliders = FindObjectsOfType<CustomMeshCollider>().ToList();
     }
 
     private void Update()

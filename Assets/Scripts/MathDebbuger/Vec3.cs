@@ -142,10 +142,12 @@ namespace CustomMath
 
         public static bool operator ==(Vec3 left, Vec3 right)
         {
-            float diff_x = left.x - right.x;
-            float diff_y = left.y - right.y;
-            float diff_z = left.z - right.z;
-            float sqrmag = diff_x * diff_x + diff_y * diff_y + diff_z * diff_z;
+            float diffX = left.x - right.x;
+            float diffY = left.y - right.y;
+            float diffZ = left.z - right.z;
+            
+            float sqrmag = diffX * diffX + diffY * diffY + diffZ * diffZ;
+            
             return sqrmag < epsilon * epsilon;
         }
 
@@ -241,6 +243,7 @@ namespace CustomMath
         public static Vec3 Cross(Vec3 a, Vec3 b)
         {
             Vec3 cross;
+            
             cross.x = a.y * b.z - a.z * b.y;
             cross.y = a.z * b.x - a.x * b.z;
             cross.z = a.x * b.y - a.y * b.x;

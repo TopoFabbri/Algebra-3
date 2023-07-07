@@ -348,6 +348,7 @@ MonoBehaviour:
     y: 1
     z: 1
   rotationAngle: 180
+  lerpValue: 5
   dot: 1.7320508
   euler:
     x: 0
@@ -373,6 +374,11 @@ MonoBehaviour:
     y: 0.008649721
     z: 0.00880202
     w: 0.9998851
+  lerpUnclamped:
+    x: NaN
+    y: NaN
+    z: NaN
+    w: NaN
 --- !u!65 &1074734265
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -495,6 +501,7 @@ MonoBehaviour:
     w: -0.00000004371139
   v: {x: 1, y: 1, z: 1}
   rotationAngle: 180
+  lerpValue: 1
   dot: 1.7320508
   euler: {x: -0, y: 90, z: 90}
   product:
@@ -514,6 +521,11 @@ MonoBehaviour:
     y: 0.008649721
     z: 0.008649721
     w: 0.9998864
+  lerpUnclamped:
+    x: 0.5773503
+    y: 0.5773503
+    z: 0.5773503
+    w: 0
 --- !u!65 &1760443002
 BoxCollider:
   m_ObjectHideFlags: 0

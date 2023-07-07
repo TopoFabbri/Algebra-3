@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CustomMath;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class CustomTransform : MonoBehaviour
 {
@@ -11,7 +12,8 @@ public class CustomTransform : MonoBehaviour
     [SerializeField] private CustomQuat q2;
     [SerializeField] private Vec3 v;
     [SerializeField] private float rotationAngle;
-        
+    [SerializeField] private float lerpValue;
+
     [Header("Tests:")]
     [SerializeField] private float dot;
     [SerializeField] private Vec3 euler;
@@ -20,6 +22,7 @@ public class CustomTransform : MonoBehaviour
     [SerializeField] private CustomQuat normalized;
     [SerializeField] private float angle;
     [SerializeField] private CustomQuat eulerToQuat;
+    [SerializeField] private CustomQuat lerp;
 
     private void OnDrawGizmosSelected()
     {
@@ -31,6 +34,7 @@ public class CustomTransform : MonoBehaviour
         normalized = q1.normalized;
         angle = CustomQuat.Dot(q1, q2);
         eulerToQuat = CustomQuat.Euler(v);
+        lerp = CustomQuat.Lerp(q1, q2, lerpValue);
 
         transform.rotation = q2;
         

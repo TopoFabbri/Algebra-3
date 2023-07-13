@@ -444,8 +444,9 @@ MonoBehaviour:
   v: {x: 5, y: 1, z: 2}
   rotationAngle: 90
   lerpValue: 1
+  rotateTowardsValue: 0
   dot: 0.6488675
-  euler: {x: 8.670922, y: 97.75139, z: 32.545124}
+  euler: {x: 57.80118, y: 75.50931, z: 86.413475}
   product:
     x: 0.66622007
     y: 0.07626658
@@ -464,10 +465,20 @@ MonoBehaviour:
     z: 0.043956496
     w: 0.99804276
   lerp:
-    x: 0.64549726
-    y: 0.12909946
-    z: 0.25819892
-    w: 0.7071068
+    x: 0.6454972
+    y: 0.12909944
+    z: 0.2581989
+    w: 0.70710677
+  rotateTowards:
+    x: 0.6454972
+    y: 0.12909944
+    z: 0.2581989
+    w: 0.70710677
+  lookRotation:
+    x: 0.4687817
+    y: -0.31252113
+    z: 0.5841978
+    w: 0.5841978
 --- !u!65 &1074734265
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -592,6 +603,7 @@ MonoBehaviour:
   v: {x: 5, y: 1, z: 2}
   rotationAngle: 90
   lerpValue: 1
+  rotateTowardsValue: 0
   dot: 0.6488675
   euler: {x: 57.80121, y: 75.509315, z: 86.41348}
   product:
@@ -613,9 +625,19 @@ MonoBehaviour:
     w: 0.9988647
   lerp:
     x: 0.64549726
-    y: 0.12909946
-    z: 0.25819892
-    w: 0.7071068
+    y: 0.12909944
+    z: 0.2581989
+    w: 0.70710677
+  rotateTowards:
+    x: -0.015653394
+    y: 0.083319336
+    z: -0.17554435
+    w: 0.9808146
+  lookRotation:
+    x: 0.51066136
+    y: -0.23801436
+    z: 0.6658447
+    w: -0.4891064
 --- !u!65 &1760443002
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -687,7 +709,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1760443000}
   m_LocalRotation: {x: 0.64549726, y: 0.12909946, z: 0.25819892, w: 0.7071068}
-  m_LocalPosition: {x: 2.479, y: 0, z: 0}
+  m_LocalPosition: {x: 2.045, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

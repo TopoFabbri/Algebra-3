@@ -282,59 +282,15 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// </summary>
     /// <param name="forward">The direction to look in.</param>
     /// <param name="upwards">The vector that defines in which direction up is.</param>
-    public static CustomQuat LookRotation(Vec3 forward, [DefaultValue("Vec3.up")] Vec3 upwards)
+    public static CustomQuat LookRotation(Vec3 forward, [DefaultValue("Vec3.up")] Vec3 upwards) 
     {
-        forward = Vec3.Normalize(forward);
+        forward = forward.normalized;
+        upwards = upwards.normalized;
+        
+        CustomQuat q1 = FromToRotation(Vec3.Forward, forward);
+        CustomQuat q2 = FromToRotation(Vec3.Up, upwards);
 
-        float angle = Vec3.Angle(Vec3.Forward, forward);
-        Vec3 axis = Vec3.Cross(Vec3.Forward, forward);
-
-        CustomQuat q = AngleAxis(angle, axis);
-
-        q = AngleAxis(angle, axis);
-
-        return q;
-
-        // float[,] m = new[,]
-        // {
-        //     { right.x, right.y, right.z },
-        //     { upwards.x, upwards.y, upwards.z },
-        //     { forward.x, forward.y, forward.z }
-        // };
-        //
-        // float diags = m[0, 0] + m[1, 1] + m[2, 2];
-        // CustomQuat q;
-        //
-        // if (diags > 0f)
-        // {
-        //     q.x = (m[1, 2] - m[2, 1]) * (0.5f / Mathf.Sqrt(diags + 1f));
-        //     q.y = (m[2, 0] - m[0, 2]) * (0.5f / Mathf.Sqrt(diags + 1f));
-        //     q.z = (m[0, 1] - m[1, 0]) * (0.5f / Mathf.Sqrt(diags + 1f));
-        //     q.w = Mathf.Sqrt(diags + 1f) / 2f;
-        // }
-        // else if (m[0, 0] >= m[1, 1] && m[0, 0] >= m[2, 2])
-        // {
-        //     q.x = Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]) / 2f;
-        //     q.y = (m[0, 1] + m[1, 0]) * (0.5f / Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]));
-        //     q.z = (m[2, 0] + m[0, 2]) * (0.5f / Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]));
-        //     q.w = (m[1, 2] - m[2, 1]) * (0.5f / Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]));
-        // }
-        // else if (m[1, 1] > m[2, 2])
-        // {
-        //     q.x = (m[1, 0] + m[0, 1]) * 0.5f / Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]);
-        //     q.y = Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]) / 2f;
-        //     q.z = (m[2, 1] + m[1, 2]) * 0.5f / Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]);
-        //     q.w = (m[2, 0] + m[0, 2]) * 0.5f / Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]);
-        // }
-        // else
-        // {
-        //     q.x = (m[2, 0] + m[0, 2]) * 0.5f / Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]);
-        //     q.y = (m[2, 1] + m[1, 2]) * 0.5f / Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]);
-        //     q.z = Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]) / 2f;
-        //     q.w = (m[0, 1] + m[1, 0]) * 0.5f / Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]);
-        // }
-
-        // return q;
+        return Inverse(q1 * q2);
     }
 
     /// <summary>
@@ -354,17 +310,14 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         return new CustomQuat(q.x / length, q.y / length, q.z / length, q.w / length);
     }
 
+    /// <summary>
+    ///   <para>Rotates a rotation from towards to.</para>
+    /// </summary>
+    /// <param name="from"></param>
+    /// <param name="to"></param>
+    /// <param name="maxDegreesDelta"></param>
     public static CustomQuat RotateTowards(CustomQuat from, CustomQuat to, float maxDegreesDelta)
     {
-        /*
-         float num = Quaternion.Angle(from, to);
-        if (num == 0f)
-        {
-            return to;
-        }
-        float t = Mathf.Min(1f, maxDegreesDelta / num);
-        return Quaternion.SlerpUnclamped(from, to, t);
-         */
         if (Dot(from, to) > 1f)
         {
             to = Normalize(to);
@@ -399,6 +352,12 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         return SlerpUnclamped(a, b, t);
     }
 
+    /// <summary>
+    ///   <para>Spherically interpolates between a and b by t. The parameter t is not clamped.</para>
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <param name="t"></param>
     public static CustomQuat SlerpUnclamped(CustomQuat a, CustomQuat b, float t)
     {
         float angle = Angle(a, b);

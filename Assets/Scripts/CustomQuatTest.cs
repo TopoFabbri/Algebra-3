@@ -6,38 +6,46 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-public class CustomTransform : MonoBehaviour
+public class CustomQuatTest : MonoBehaviour
 {
+    [Header("Values:")] 
+    [SerializeField] private Transform reference;
     [SerializeField] private CustomQuat q1;
     [SerializeField] private CustomQuat q2;
-    [SerializeField] private Vec3 v;
+    [SerializeField] private Vector3 v;
     [SerializeField] private float rotationAngle;
     [SerializeField] private float lerpValue;
+    [SerializeField] private float rotateTowardsValue;
 
-    [Header("Tests:")]
+    [Header("Tests:")] 
     [SerializeField] private float dot;
-    [SerializeField] private Vec3 euler;
+    [SerializeField] private Vector3 euler;
     [SerializeField] private CustomQuat product;
-    [SerializeField] private Vec3 vectorProduct;
+    [SerializeField] private Vector3 vectorProduct;
     [SerializeField] private CustomQuat normalized;
     [SerializeField] private float angle;
     [SerializeField] private CustomQuat eulerToQuat;
     [SerializeField] private CustomQuat lerp;
+    [SerializeField] private CustomQuat rotateTowards;
+    [SerializeField] private CustomQuat lookRotation;
 
     private void OnDrawGizmosSelected()
     {
+        q1 = reference.transform.rotation;
+        
         q2 = CustomQuat.AngleAxis(rotationAngle, v);
         dot = CustomQuat.Dot(q1, q2);
-        euler = q1.eulerAngles;
+        euler = q2.eulerAngles;
         product = q1 * q2;
         vectorProduct = q1 * v;
         normalized = q1.normalized;
-        angle = CustomQuat.Dot(q1, q2);
+        angle = CustomQuat.Angle(q1, q2);
         eulerToQuat = CustomQuat.Euler(v);
-        lerp = CustomQuat.Lerp(q1, q2, lerpValue);
+        lerp = CustomQuat.SlerpUnclamped(q1, q2, lerpValue);
+        rotateTowards = CustomQuat.RotateTowards(q1, q2, rotateTowardsValue);
+        lookRotation = CustomQuat.LookRotation(v, Vec3.Right);
 
         transform.rotation = q2;
-        
         Draw();
     }
 
@@ -45,6 +53,6 @@ public class CustomTransform : MonoBehaviour
     {
         float lineLength = 2f;
         Gizmos.color = Color.magenta;
-        Gizmos.DrawLine((Vec3)transform.position - v.normalized * lineLength, (Vec3)transform.position + v.normalized * lineLength);
+        Gizmos.DrawLine(transform.position - v.normalized * lineLength, transform.position + v.normalized * lineLength);
     }
 }

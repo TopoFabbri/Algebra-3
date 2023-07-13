@@ -2,33 +2,40 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using CustomMath;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Internal;
 
 [Serializable]
 public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
 {
-    public const float kEpsilon = 1E-06F;
+    #region Variables
+
+    public const float KEpsilon = 1E-06F;
 
     /// <summary>
     ///   <para>X component of the Quaternion. Don't modify this directly unless you know quaternions inside out.</para>
     /// </summary>
     public float x;
-    
+
     /// <summary>
     ///   <para>Y component of the Quaternion. Don't modify this directly unless you know quaternions inside out.</para>
     /// </summary>
     public float y;
-    
+
     /// <summary>
     ///   <para>Z component of the Quaternion. Don't modify this directly unless you know quaternions inside out.</para>
     /// </summary>
     public float z;
-    
+
     /// <summary>
     ///   <para>W component of the Quaternion. Do not directly modify quaternions.</para>
     /// </summary>
     public float w;
+
+    #endregion
+
+    #region Constructor
 
     /// <summary>
     ///   <para>Constructs new Quaternion with given x,y,z,w components.</para>
@@ -44,6 +51,10 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         this.z = z;
         this.w = w;
     }
+
+    #endregion
+
+    #region Properties
 
     /// <summary>
     /// Set a variable by it's index
@@ -74,7 +85,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     ///   <para>The identity rotation (Read Only).</para>
     /// </summary>
     public static CustomQuat identity => new(0f, 0f, 0f, 1f);
-    
+
     /// <summary>
     ///   <para>Returns or sets the euler angle representation of the rotation.</para>
     /// </summary>
@@ -83,19 +94,26 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         get
         {
             Vec3 euler;
-            euler.x = Mathf.Asin(2f * (x * z - w * y));
-            euler.y = Mathf.Atan2(2f * (x * w + y * z), 1f - 2f * (z * z + w * w));
-            euler.z = Mathf.Atan2(2f * (x * y + z * w), 1f - 2f * (y * y + z * z));
+
+            euler.z = Mathf.Atan2(2f * (w * z + x * y), 1f - 2f * (z * z + x * x));
+            euler.x = -Mathf.PI / 2f + 2f * Mathf.Atan2(Mathf.Sqrt(1f + 2f * (w * x - y * z)),
+                Mathf.Sqrt(1f - 2f * (w * x - y * z)));
+            euler.y = Mathf.Atan2(2f * (w * y + x * z), 1f - 2f * (y * y + x * x));
+
             return euler * Mathf.Rad2Deg;
         }
         set => this = Euler(value);
     }
-    
+
     /// <summary>
     ///   <para>Returns this quaternion with a magnitude of 1 (Read Only).</para>
     /// </summary>
     public CustomQuat normalized => Normalize(new CustomQuat(x, y, z, w));
-    
+
+    #endregion
+
+    #region Functions
+
     /// <summary>
     ///   <para>Returns the angle in degrees between two rotations a and b.</para>
     /// </summary>
@@ -121,7 +139,6 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         return q;
     }
 
-    
     /// <summary>
     ///   <para>The dot product between two rotations.</para>
     /// </summary>
@@ -228,26 +245,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     public static CustomQuat Lerp(CustomQuat a, CustomQuat b, float t)
     {
         t = Mathf.Clamp01(t);
-
-        float tNeg = 1f - t;
-        CustomQuat res;
-
-        if (Dot(a, b) > 0f)
-        {
-            res.x = tNeg * a.x + t * b.x;
-            res.y = tNeg * a.y + t * b.y;
-            res.z = tNeg * a.z + t * b.z;
-            res.w = tNeg * a.w + t * b.w;
-        }
-        else
-        {
-            res.x = tNeg * a.x - t * b.x;
-            res.y = tNeg * a.y - t * b.y;
-            res.z = tNeg * a.z - t * b.z;
-            res.w = tNeg * a.w - t * b.w;
-        }
-
-        return res.normalized;
+        return LerpUnclamped(a, b, t);
     }
 
     /// <summary>
@@ -287,48 +285,56 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     public static CustomQuat LookRotation(Vec3 forward, [DefaultValue("Vec3.up")] Vec3 upwards)
     {
         forward = Vec3.Normalize(forward);
-        Vec3 right = Vec3.Normalize(Vec3.Cross(upwards, forward));
 
-        float[,] m = new[,]
-        {
-            { right.x, right.y, right.z },
-            { upwards.x, upwards.y, upwards.z },
-            { forward.x, forward.y, forward.z }
-        };
+        float angle = Vec3.Angle(Vec3.Forward, forward);
+        Vec3 axis = Vec3.Cross(Vec3.Forward, forward);
 
-        float diags = m[0, 0] + m[1, 1] + m[2, 2];
-        CustomQuat q;
+        CustomQuat q = AngleAxis(angle, axis);
 
-        if (diags > 0f)
-        {
-            q.x = (m[1, 2] - m[2, 1]) * (0.5f / Mathf.Sqrt(diags + 1f));
-            q.y = (m[2, 0] - m[0, 2]) * (0.5f / Mathf.Sqrt(diags + 1f));
-            q.z = (m[0, 1] - m[1, 0]) * (0.5f / Mathf.Sqrt(diags + 1f));
-            q.w = Mathf.Sqrt(diags + 1f) / 2f;
-        }
-        else if (m[0, 0] >= m[1, 1] && m[0, 0] >= m[2, 2])
-        {
-            q.x = Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]) / 2f;
-            q.y = (m[0, 1] + m[1, 0]) * (0.5f / Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]));
-            q.z = (m[2, 0] + m[0, 2]) * (0.5f / Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]));
-            q.w = (m[1, 2] - m[2, 1]) * (0.5f / Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]));
-        }
-        else if (m[1, 1] > m[2, 2])
-        {
-            q.x = (m[1, 0] + m[0, 1]) * 0.5f / Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]);
-            q.y = Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]) / 2f;
-            q.z = (m[2, 1] + m[1, 2]) * 0.5f / Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]);
-            q.w = (m[2, 0] + m[0, 2]) * 0.5f / Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]);
-        }
-        else
-        {
-            q.x = (m[2, 0] + m[0, 2]) * 0.5f / Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]);
-            q.y = (m[2, 1] + m[1, 2]) * 0.5f / Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]);
-            q.z = Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]) / 2f;
-            q.w = (m[0, 1] + m[1, 0]) * 0.5f / Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]);
-        }
+        q = AngleAxis(angle, axis);
 
         return q;
+
+        // float[,] m = new[,]
+        // {
+        //     { right.x, right.y, right.z },
+        //     { upwards.x, upwards.y, upwards.z },
+        //     { forward.x, forward.y, forward.z }
+        // };
+        //
+        // float diags = m[0, 0] + m[1, 1] + m[2, 2];
+        // CustomQuat q;
+        //
+        // if (diags > 0f)
+        // {
+        //     q.x = (m[1, 2] - m[2, 1]) * (0.5f / Mathf.Sqrt(diags + 1f));
+        //     q.y = (m[2, 0] - m[0, 2]) * (0.5f / Mathf.Sqrt(diags + 1f));
+        //     q.z = (m[0, 1] - m[1, 0]) * (0.5f / Mathf.Sqrt(diags + 1f));
+        //     q.w = Mathf.Sqrt(diags + 1f) / 2f;
+        // }
+        // else if (m[0, 0] >= m[1, 1] && m[0, 0] >= m[2, 2])
+        // {
+        //     q.x = Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]) / 2f;
+        //     q.y = (m[0, 1] + m[1, 0]) * (0.5f / Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]));
+        //     q.z = (m[2, 0] + m[0, 2]) * (0.5f / Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]));
+        //     q.w = (m[1, 2] - m[2, 1]) * (0.5f / Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]));
+        // }
+        // else if (m[1, 1] > m[2, 2])
+        // {
+        //     q.x = (m[1, 0] + m[0, 1]) * 0.5f / Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]);
+        //     q.y = Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]) / 2f;
+        //     q.z = (m[2, 1] + m[1, 2]) * 0.5f / Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]);
+        //     q.w = (m[2, 0] + m[0, 2]) * 0.5f / Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]);
+        // }
+        // else
+        // {
+        //     q.x = (m[2, 0] + m[0, 2]) * 0.5f / Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]);
+        //     q.y = (m[2, 1] + m[1, 2]) * 0.5f / Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]);
+        //     q.z = Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]) / 2f;
+        //     q.w = (m[0, 1] + m[1, 0]) * 0.5f / Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]);
+        // }
+
+        // return q;
     }
 
     /// <summary>
@@ -348,6 +354,36 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         return new CustomQuat(q.x / length, q.y / length, q.z / length, q.w / length);
     }
 
+    public static CustomQuat RotateTowards(CustomQuat from, CustomQuat to, float maxDegreesDelta)
+    {
+        /*
+         float num = Quaternion.Angle(from, to);
+        if (num == 0f)
+        {
+            return to;
+        }
+        float t = Mathf.Min(1f, maxDegreesDelta / num);
+        return Quaternion.SlerpUnclamped(from, to, t);
+         */
+        if (Dot(from, to) > 1f)
+        {
+            to = Normalize(to);
+            from = Normalize(from);
+        }
+
+        if (maxDegreesDelta < 0)
+            to = Inverse(to);
+
+        float angle = Angle(from, to);
+        Mathf.Abs(maxDegreesDelta);
+        maxDegreesDelta = maxDegreesDelta / angle;
+
+        if (angle > 1f - KEpsilon)
+            return to;
+
+        return Slerp(from, to, maxDegreesDelta);
+    }
+
     /// <summary>
     ///   <para>Spherically interpolates between quaternions a and b by ratio t. The parameter t is clamped to the range [0, 1].</para>
     /// </summary>
@@ -360,21 +396,27 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     public static CustomQuat Slerp(CustomQuat a, CustomQuat b, float t)
     {
         t = Mathf.Clamp01(t);
-        
-        float cosTheta = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
-        float angle = Mathf.Acos(cosTheta);
-        float sinTheta = Mathf.Sqrt(1f - cosTheta * cosTheta);
-        float wa = Mathf.Sin((1f - t) * angle) / sinTheta;
-        float wb = Mathf.Sin(t * angle) / sinTheta;
-
-        return new CustomQuat(
-            wa * a.x + wb * b.x,
-            wa * a.y + wb * b.y,
-            wa * a.z + wb * b.z,
-            wa * a.w + wb * b.w
-        );
+        return SlerpUnclamped(a, b, t);
     }
-    
+
+    public static CustomQuat SlerpUnclamped(CustomQuat a, CustomQuat b, float t)
+    {
+        float angle = Angle(a, b);
+
+        float tNeg = 1f - t;
+        float s1 = (float)Math.Sin(tNeg * angle) * (1f / Mathf.Sin(angle));
+        float s2 = (float)Math.Sin(t * angle) * (1f / Mathf.Sin(angle));
+
+        CustomQuat ans;
+
+        ans.x = s1 * a.x + s2 * b.x;
+        ans.y = s1 * a.y + s2 * b.y;
+        ans.z = s1 * a.z + s2 * b.z;
+        ans.w = s1 * a.w + s2 * b.w;
+
+        return ans;
+    }
+
     /// <summary>
     ///   <para>Set x, y, z and w components of an existing Quaternion.</para>
     /// </summary>
@@ -412,6 +454,15 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="up">The vector that defines in which direction up is.</param>
     public void SetLookRotation(Vec3 view, [DefaultValue("Vec3.up")] Vec3 up) => this = LookRotation(view, Vec3.Up);
 
+    public void ToAngleAxis(out float angle, out Vec3 axis)
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region Operators
+
     public static CustomQuat operator *(CustomQuat q1, CustomQuat q2)
     {
         /*
@@ -435,24 +486,18 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         Vec3 v = point;
         Vec3 res = Vec3.Zero;
 
-        res.x = v.x * (q.x * q.x + q.w * q.w - q.y * q.y - q.z * q.z) + v.y * (2f * q.x * q.y - 2f * q.w * q.z) +
-                v.z * (2f * q.x * q.z + 2f * q.w * q.y);
-        res.y = v.x * (2f * q.w * q.z + 2f * q.x * q.y) + v.y * (q.w * q.w - q.x * q.x + q.y * q.y - q.z * q.z) +
-                v.z * (-2f * q.w * q.x + 2f * q.y * q.z);
-        res.z = v.x * (-2 * q.w * q.y + 2 * q.x * q.z) + v.y * (2 * q.w * q.x + 2 * q.y * q.z) +
-                v.z * (q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z);
-        return res;
+        // v = q * q(v) * q*
 
-        // CustomQuat p = new(point.x, point.y, point.z, 0f);
-        // CustomQuat qConj = new(-rotation.x, -rotation.y, -rotation.z, rotation.w);
-        // CustomQuat res = p * rotation * qConj;
-        //
-        // return new Vec3(res.x, res.y, res.z);
+        CustomQuat qv = new(v.x, v.y, v.z, 0);
+        qv = q * qv * Inverse(q);
+        res = new Vec3(qv.x, qv.y, qv.z);
+
+        return res;
     }
 
     public static bool operator ==(CustomQuat lhs, CustomQuat rhs)
     {
-        return Dot(new CustomQuat(lhs.x, lhs.y, lhs.z, lhs.w), rhs) > 1f - kEpsilon;
+        return Dot(new CustomQuat(lhs.x, lhs.y, lhs.z, lhs.w), rhs) > 1f - KEpsilon;
     }
 
     public static bool operator !=(CustomQuat lhs, CustomQuat rhs) => !(lhs == rhs);
@@ -466,6 +511,10 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     {
         return new Quaternion(q.x, q.y, q.z, q.w);
     }
+
+    #endregion
+
+    #region Needed methods
 
     /// <summary>
     ///   <para>Returns a formatted string for this quaternion.</para>
@@ -486,4 +535,6 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     {
         return HashCode.Combine(x, y, z, w);
     }
+
+    #endregion
 }

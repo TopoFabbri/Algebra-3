@@ -291,6 +291,9 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
 
     public Vec3 MultiplyPoint3x4(Vec3 point)
     {
+        if (!ValidTRS())
+            return MultiplyPoint(point);
+        
         Vec3 res;
 
         res.x = m00 * point.x + m01 * point.y + m02 * point.z + m03;

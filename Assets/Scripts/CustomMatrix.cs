@@ -1,5 +1,7 @@
 using System;
 using System.Text;
+using CustomMath;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
@@ -53,20 +55,6 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
     #endregion
 
     #region Properties
-
-    public static CustomMatrix zero => new CustomMatrix(
-        new Vector4(0, 0, 0, 0),
-        new Vector4(0, 0, 0, 0),
-        new Vector4(0, 0, 0, 0),
-        new Vector4(0, 0, 0, 0)
-    );
-
-    public static CustomMatrix identity => new CustomMatrix(
-        new Vector4(1f, 0f, 0f, 0f),
-        new Vector4(0f, 1f, 0f, 0f),
-        new Vector4(0f, 0f, 1f, 0f),
-        new Vector4(0f, 0f, 0f, 1f)
-    );
 
     public float this[int row, int column]
     {
@@ -158,7 +146,23 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
         }
     }
 
+    public static CustomMatrix zero => new CustomMatrix(
+        new Vector4(0, 0, 0, 0),
+        new Vector4(0, 0, 0, 0),
+        new Vector4(0, 0, 0, 0),
+        new Vector4(0, 0, 0, 0)
+    );
+
+    public static CustomMatrix identity => new CustomMatrix(
+        new Vector4(1f, 0f, 0f, 0f),
+        new Vector4(0f, 1f, 0f, 0f),
+        new Vector4(0f, 0f, 1f, 0f),
+        new Vector4(0f, 0f, 0f, 1f)
+    );
+
     public float determinant => Determinant(this);
+
+    public CustomMatrix transpose => Transpose(this);
 
     #endregion
 
@@ -167,123 +171,183 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
     public static float Determinant(CustomMatrix m)
     {
         float det1 = m.m00 * (m.m11 * m.m22 * m.m33 + m.m12 * m.m23 * m.m31 + m.m13 * m.m21 * m.m32
-                            - m.m13 * m.m22 * m.m31 - m.m12 * m.m21 * m.m33 - m.m11 * m.m23 * m.m32);
+                              - m.m13 * m.m22 * m.m31 - m.m12 * m.m21 * m.m33 - m.m11 * m.m23 * m.m32);
 
         float det2 = m.m01 * (m.m10 * m.m22 * m.m33 + m.m12 * m.m23 * m.m30 + m.m13 * m.m20 * m.m32
-                            - m.m13 * m.m22 * m.m30 - m.m12 * m.m20 * m.m33 - m.m10 * m.m23 * m.m32);
-        
+                              - m.m13 * m.m22 * m.m30 - m.m12 * m.m20 * m.m33 - m.m10 * m.m23 * m.m32);
+
         float det3 = m.m02 * (m.m10 * m.m21 * m.m33 + m.m11 * m.m23 * m.m30 + m.m13 * m.m20 * m.m31
-                            - m.m13 * m.m21 * m.m30 - m.m11 * m.m20 * m.m33 - m.m10 * m.m23 * m.m31);
-        
+                              - m.m13 * m.m21 * m.m30 - m.m11 * m.m20 * m.m33 - m.m10 * m.m23 * m.m31);
+
         float det4 = m.m03 * (m.m10 * m.m21 * m.m32 + m.m11 * m.m22 * m.m30 + m.m12 * m.m20 * m.m31
-                            - m.m12 * m.m21 * m.m30 - m.m11 * m.m20 * m.m32 - m.m10 * m.m22 * m.m31);
+                              - m.m12 * m.m21 * m.m30 - m.m11 * m.m20 * m.m32 - m.m10 * m.m22 * m.m31);
 
         return det1 - det2 + det3 - det4;
     }
 
-    public static CustomMatrix Inverse(CustomMatrix m)
+    public static CustomMatrix Rotate(CustomQuat q)
     {
-        
+        float x = q.eulerAngles.x;
+        float y = q.eulerAngles.y;
+        float z = q.eulerAngles.z;
+
+        CustomMatrix mX = identity;
+        CustomMatrix mY = identity;
+        CustomMatrix mZ = identity;
+
+        mX.m11 = Mathf.Cos(x);
+        mX.m12 = -Mathf.Sin(x);
+        mX.m21 = Mathf.Sin(x);
+        mX.m22 = Mathf.Cos(x);
+
+        mY.m00 = Mathf.Cos(y);
+        mY.m02 = Mathf.Sin(y);
+        mY.m20 = -Mathf.Sin(y);
+        mY.m22 = Mathf.Cos(y);
+
+        mZ.m00 = Mathf.Cos(z);
+        mZ.m01 = -Mathf.Sin(z);
+        mZ.m10 = Mathf.Sin(z);
+        mZ.m11 = Mathf.Cos(z);
+
+        return mZ * mX * mY;
     }
 
-    public void SetTRS(Vector3 pos, Quaternion q, Vector3 s)
+    public static CustomMatrix Scale(Vec3 vector)
     {
-        // var rotation = Rotate(q);
-        // var scale = Scale(s);
-        // var translation = Translate(pos);
-        //
-        // var result = translation * rotation * scale;
-        //
-        // for (int i = 0; i < 16; i++)
-        //     this[i] = result[i];
+        CustomMatrix m = identity;
+
+        m.m00 = vector.x;
+        m.m11 = vector.y;
+        m.m22 = vector.z;
+
+        return m;
+    }
+
+    public static CustomMatrix Translate(Vec3 vector)
+    {
+        CustomMatrix m = identity;
+
+        m.m03 = vector.x;
+        m.m13 = vector.y;
+        m.m23 = vector.y;
+
+        return m;
+    }
+
+    public static CustomMatrix Transpose(CustomMatrix m)
+    {
+        Vector4 line1 = new Vector4(m.m00, m.m01, m.m02, m.m03);
+        Vector4 line2 = new Vector4(m.m10, m.m11, m.m12, m.m13);
+        Vector4 line3 = new Vector4(m.m20, m.m21, m.m22, m.m23);
+        Vector4 line4 = new Vector4(m.m30, m.m31, m.m32, m.m33);
+
+        return new CustomMatrix(line1, line2, line3, line4);
+    }
+
+    public static CustomMatrix TRS(Vector3 pos, CustomQuat q, Vector3 s)
+    {
+        CustomMatrix rotation = Rotate(q);
+        CustomMatrix scale = Scale(s);
+        CustomMatrix translation = Translate(pos);
+
+        CustomMatrix result = translation * rotation * scale;
+
+        return result;
     }
 
     public Vector4 GetColumn(int index)
     {
-        switch (index)
-        {
-            case 0: return new Vector4(m00, m10, m20, m30);
-            case 1: return new Vector4(m01, m11, m21, m31);
-            case 2: return new Vector4(m02, m12, m22, m32);
-            case 3: return new Vector4(m03, m13, m23, m33);
-            default: throw new IndexOutOfRangeException("Invalid column index!");
-        }
+        return new Vector4(this[0, index], this[1, index], this[2, index], this[3, index]);
     }
 
-    public void SetColumn(int index, Vector4 column)
+    public Vec3 GetPosition()
     {
-        switch (index)
-        {
-            case 0:
-                m00 = column.x;
-                m10 = column.y;
-                m20 = column.z;
-                m30 = column.w;
-                break;
-            case 1:
-                m01 = column.x;
-                m11 = column.y;
-                m21 = column.z;
-                m31 = column.w;
-                break;
-            case 2:
-                m02 = column.x;
-                m12 = column.y;
-                m22 = column.z;
-                m32 = column.w;
-                break;
-            case 3:
-                m03 = column.x;
-                m13 = column.y;
-                m23 = column.z;
-                m33 = column.w;
-                break;
-            default: throw new IndexOutOfRangeException("Invalid column index!");
-        }
+        if (ValidTRS())
+            return new Vector3(this.m03, this.m13, this.m23);
+        else
+            return Vec3.Zero;
     }
 
     public Vector4 GetRow(int index)
     {
-        switch (index)
-        {
-            case 0: return new Vector4(m00, m01, m02, m03);
-            case 1: return new Vector4(m10, m11, m12, m13);
-            case 2: return new Vector4(m20, m21, m22, m23);
-            case 3: return new Vector4(m30, m31, m32, m33);
-            default: throw new IndexOutOfRangeException("Invalid row index!");
-        }
+        return new Vector4(this[index, 0], this[index, 1], this[index, 2], this[index, 3]);
+    }
+
+    public Vec3 MultiplyPoint(Vec3 point)
+    {
+        Vec3 res;
+        res.x = m00 * point.x + m01 * point.y + m02 * point.z + m03;
+        res.y = m10 * point.x + m11 * point.y + m12 * point.z + m13;
+        res.z = m20 * point.x + m21 * point.y + m22 * point.z + m23;
+        float num = m30 * point.x + m31 * point.y + m32 * point.z + m33;
+
+        res.x /= num;
+        res.y /= num;
+        res.z /= num;
+
+        return res;
+    }
+
+    public Vec3 MultiplyPoint3x4(Vec3 point)
+    {
+        Vec3 res;
+
+        res.x = m00 * point.x + m01 * point.y + m02 * point.z + m03;
+        res.y = m10 * point.x + m11 * point.y + m12 * point.z + m13;
+        res.z = m20 * point.x + m21 * point.y + m22 * point.z + m23;
+
+        return res;
+    }
+
+    public Vec3 MultiplyVector(Vec3 vector)
+    {
+        Vector3 res;
+        res.x = m00 * vector.x + m01 * vector.y + m02 * vector.z;
+        res.y = m10 * vector.x + m11 * vector.y + m12 * vector.z;
+        res.z = m20 * vector.x + m21 * vector.y + m22 * vector.z;
+        return res;
+    }
+
+    public void SetColumn(int index, Vector4 column)
+    {
+        this[0, index] = column[0];
+        this[1, index] = column[1];
+        this[2, index] = column[2];
+        this[3, index] = column[3];
+
+        if (index > 3)
+            throw new IndexOutOfRangeException("Invalid row index!");
     }
 
     public void SetRow(int index, Vector4 row)
     {
-        switch (index)
-        {
-            case 0:
-                m00 = row.x;
-                m01 = row.y;
-                m02 = row.z;
-                m03 = row.w;
-                break;
-            case 1:
-                m10 = row.x;
-                m11 = row.y;
-                m12 = row.z;
-                m13 = row.w;
-                break;
-            case 2:
-                m20 = row.x;
-                m21 = row.y;
-                m22 = row.z;
-                m23 = row.w;
-                break;
-            case 3:
-                m30 = row.x;
-                m31 = row.y;
-                m32 = row.z;
-                m33 = row.w;
-                break;
-            default: throw new IndexOutOfRangeException("Invalid row index!");
-        }
+        this[index, 0] = row[0];
+        this[index, 1] = row[1];
+        this[index, 2] = row[2];
+        this[index, 3] = row[3];
+
+        if (index > 3)
+            throw new IndexOutOfRangeException("Invalid row index!");
+    }
+
+    public void SetTRS(Vector3 pos, Quaternion q, Vector3 s) => this = TRS(pos, q, s);
+
+    public bool ValidTRS()
+    {
+        if (GetRow(3) != new Vector4(0, 0, 0, 1))
+            return false;
+
+        if (m00 < 0 || m11 < 0 || m22 < 0)
+            return false;
+
+        Vec3 column0 = new Vec3(m00, m10, m20);
+        Vec3 column1 = new Vec3(m01, m11, m21);
+        Vec3 column2 = new Vec3(m02, m12, m22);
+
+        return Mathf.Approximately(Vec3.Dot(column0, column1), 0) &&
+               Mathf.Approximately(Vec3.Dot(column0, column2), 0) &&
+               Mathf.Approximately(Vec3.Dot(column1, column2), 0);
     }
 
     #endregion

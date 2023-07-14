@@ -282,11 +282,11 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// </summary>
     /// <param name="forward">The direction to look in.</param>
     /// <param name="upwards">The vector that defines in which direction up is.</param>
-    public static CustomQuat LookRotation(Vec3 forward, [DefaultValue("Vec3.up")] Vec3 upwards) 
+    public static CustomQuat LookRotation(Vec3 forward, [DefaultValue("Vec3.up")] Vec3 upwards)
     {
         forward = forward.normalized;
         upwards = upwards.normalized;
-        
+
         CustomQuat q1 = FromToRotation(Vec3.Forward, forward);
         CustomQuat q2 = FromToRotation(Vec3.Up, upwards);
 
@@ -318,11 +318,8 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="maxDegreesDelta"></param>
     public static CustomQuat RotateTowards(CustomQuat from, CustomQuat to, float maxDegreesDelta)
     {
-        if (Dot(from, to) > 1f)
-        {
-            to = Normalize(to);
-            from = Normalize(from);
-        }
+        to = Normalize(to);
+        from = Normalize(from);
 
         if (maxDegreesDelta < 0)
             to = Inverse(to);
@@ -412,11 +409,6 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="view">The direction to look in.</param>
     /// <param name="up">The vector that defines in which direction up is.</param>
     public void SetLookRotation(Vec3 view, [DefaultValue("Vec3.up")] Vec3 up) => this = LookRotation(view, Vec3.Up);
-
-    public void ToAngleAxis(out float angle, out Vec3 axis)
-    {
-        throw new NotImplementedException();
-    }
 
     #endregion
 

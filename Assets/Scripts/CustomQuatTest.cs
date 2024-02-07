@@ -35,10 +35,10 @@ public class CustomQuatTest : MonoBehaviour
         
         q2 = CustomQuat.AngleAxis(rotationAngle, v);
         dot = CustomQuat.Dot(q1, q2);
-        euler = q2.eulerAngles;
+        euler = q2.EulerAngles;
         product = q1 * q2;
         vectorProduct = q1 * v;
-        normalized = q1.normalized;
+        normalized = q1.Normalized;
         angle = CustomQuat.Angle(q1, q2);
         eulerToQuat = CustomQuat.Euler(v);
         lerp = CustomQuat.SlerpUnclamped(q1, q2, lerpValue);

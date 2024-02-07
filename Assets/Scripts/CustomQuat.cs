@@ -84,12 +84,12 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <summary>
     ///   <para>The identity rotation (Read Only).</para>
     /// </summary>
-    public static CustomQuat identity => new(0f, 0f, 0f, 1f);
+    public static CustomQuat Identity => new(0f, 0f, 0f, 1f);
 
     /// <summary>
     ///   <para>Returns or sets the euler angle representation of the rotation.</para>
     /// </summary>
-    public Vec3 eulerAngles
+    public Vec3 EulerAngles
     {
         get
         {
@@ -108,7 +108,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <summary>
     ///   <para>Returns this quaternion with a magnitude of 1 (Read Only).</para>
     /// </summary>
-    public CustomQuat normalized => Normalize(new CustomQuat(x, y, z, w));
+    public CustomQuat Normalized => Normalize(new CustomQuat(x, y, z, w));
 
     #endregion
 
@@ -274,7 +274,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
             res.w = tNeg * a.w - t * b.w;
         }
 
-        return res.normalized;
+        return res.Normalized;
     }
 
     /// <summary>
@@ -424,10 +424,10 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         */
 
         return new CustomQuat(
-            (float)(q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y),
-            (float)(q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x),
-            (float)(q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w),
-            (float)(q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z)
+            q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
+            q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,
+            q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w,
+            q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
         );
     }
 

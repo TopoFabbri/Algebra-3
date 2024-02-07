@@ -164,7 +164,7 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
 
     public CustomMatrix transpose => Transpose(this);
 
-    #endregion
+    #endregion 
 
     #region Functions
 
@@ -187,9 +187,9 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
 
     public static CustomMatrix Rotate(CustomQuat q)
     {
-        float x = q.eulerAngles.x;
-        float y = q.eulerAngles.y;
-        float z = q.eulerAngles.z;
+        float x = q.EulerAngles.x;
+        float y = q.EulerAngles.y;
+        float z = q.EulerAngles.z;
 
         CustomMatrix mX = identity;
         CustomMatrix mY = identity;
@@ -247,9 +247,9 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
 
     public static CustomMatrix TRS(Vector3 pos, CustomQuat q, Vector3 s)
     {
+        CustomMatrix translation = Translate(pos);
         CustomMatrix rotation = Rotate(q);
         CustomMatrix scale = Scale(s);
-        CustomMatrix translation = Translate(pos);
 
         CustomMatrix result = translation * rotation * scale;
 

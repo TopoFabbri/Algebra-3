@@ -1,10 +1,5 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using CustomMath;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class CustomQuatTest : MonoBehaviour
 {
@@ -43,9 +38,9 @@ public class CustomQuatTest : MonoBehaviour
         eulerToQuat = CustomQuat.Euler(v);
         lerp = CustomQuat.SlerpUnclamped(q1, q2, lerpValue);
         rotateTowards = CustomQuat.RotateTowards(q1, q2, rotateTowardsValue);
-        lookRotation = CustomQuat.LookRotation(v, Vec3.Right);
+        lookRotation = CustomQuat.LookRotation(v, Vec3.Forward);
 
-        transform.rotation = q2;
+        transform.rotation = lookRotation;
         Draw();
     }
 

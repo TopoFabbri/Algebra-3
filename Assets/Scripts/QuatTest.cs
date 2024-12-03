@@ -1,8 +1,4 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class QuatTest : MonoBehaviour
 {
@@ -43,9 +39,9 @@ public class QuatTest : MonoBehaviour
         eulerToQuat = Quaternion.Euler(v);
         lerp = Quaternion.SlerpUnclamped(q1, q2, lerpValue);
         rotateTowards = Quaternion.RotateTowards(q1, q2, rotateTowardsValue);
-        lookRotation = Quaternion.LookRotation(v, Vector3.right);
+        lookRotation = Quaternion.LookRotation(v, Vector3.forward);
         
-        transform.rotation = q2;
+        transform.rotation = lookRotation;
         Draw();
     }
 

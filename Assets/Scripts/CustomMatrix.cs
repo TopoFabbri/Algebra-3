@@ -1,7 +1,6 @@
 using System;
 using System.Text;
 using CustomMath;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable

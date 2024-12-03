@@ -1,14 +1,16 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using CustomMath;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Internal;
 
 [Serializable]
 public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
 {
+    public override bool Equals(object obj)
+    {
+        return obj is CustomQuat other && Equals(other);
+    }
+
     #region Variables
 
     public const float KEpsilon = 1E-06F;
@@ -155,28 +157,23 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="euler"></param>
     public static CustomQuat Euler(Vec3 euler)
     {
-        CustomQuat x = new CustomQuat(
-            Mathf.Sin(euler.x / 2f * Mathf.Deg2Rad),
-            0f,
-            0f,
-            Mathf.Cos(euler.x / 2f * Mathf.Deg2Rad)
-        );
+        float xRad = euler.x * Mathf.Deg2Rad;
+        float yRad = euler.y * Mathf.Deg2Rad;
+        float zRad = euler.z * Mathf.Deg2Rad;
 
-        CustomQuat y = new CustomQuat(
-            0f,
-            Mathf.Sin(euler.y / 2f * Mathf.Deg2Rad),
-            0f,
-            Mathf.Cos(euler.y / 2f * Mathf.Deg2Rad)
-        );
+        float cX = Mathf.Cos(xRad / 2f);
+        float cY = Mathf.Cos(yRad / 2f);
+        float cZ = Mathf.Cos(zRad / 2f);
+        float sX = Mathf.Sin(xRad / 2f);
+        float sY = Mathf.Sin(yRad / 2f);
+        float sZ = Mathf.Sin(zRad / 2f);
 
-        CustomQuat z = new CustomQuat(
-            0f,
-            0f,
-            Mathf.Sin(euler.x / 2f * Mathf.Deg2Rad),
-            Mathf.Cos(euler.x / 2f * Mathf.Deg2Rad)
+        return new CustomQuat(
+            sX * cY * cZ + cX * sY * sZ,
+            cX * sY * cZ - sX * cY * sZ,
+            cX * cY * sZ + sX * sY * cZ,
+            cX * cY * cZ - sX * sY * sZ
         );
-
-        return x * y * z;
     }
 
     /// <summary>
@@ -284,20 +281,75 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="upwards">The vector that defines in which direction up is.</param>
     public static CustomQuat LookRotation(Vec3 forward, [DefaultValue("Vec3.up")] Vec3 upwards)
     {
-        forward = forward.normalized;
-        upwards = upwards.normalized;
+        forward.Normalize();
+        Vec3 right = Vec3.Cross(forward, upwards).normalized;
+        upwards = Vec3.Cross(right, forward);
+        
+        float[,] m = new [,]
+        {
+            {right.x, right.y, right.z},
+            {upwards.x, upwards.y, upwards.z},
+            {forward.x, forward.y, forward.z}
+        };
 
-        CustomQuat q1 = FromToRotation(Vec3.Forward, forward);
-        CustomQuat q2 = FromToRotation(Vec3.Up, upwards);
+        float diagSum = m[0, 0] + m[1, 1] + m[2, 2];
+        CustomQuat q = new();
 
-        return Inverse(q1 * q2);
+        if (diagSum > 0)
+        {
+            float num = Mathf.Sqrt(diagSum + 1f);
+            
+            q.w = .5f * num;
+            q.x = (m[1, 2] - m[2, 1]) * num;
+            q.y = (m[2, 0] - m[0, 2]) * num;
+            q.z = (m[0, 1] - m[1, 0]) * num;
+            
+            return q;
+        }
+        
+        if (m[0, 0] >= m[1, 1] && m[0, 0] >= m[2, 2])
+        {
+            float num = Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]);
+            float num4 = .5f / num;
+            
+            q.x = 0.5f * num;
+            q.y = (m[0, 1] + m[1, 0]) * num4;
+            q.z = (m[0, 2] + m[2, 0]) * num4;
+            q.w = (m[2, 1] - m[1, 2]) * num4;
+            
+            return q;
+        }
+        
+        if (m[1, 1] > m[2, 2])
+        {
+            float num = Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]);
+            float num3 = .5f / num;
+            
+            q.x = (m[1, 0] + m[0, 1]) * num3;
+            q.y = .5f * num;
+            q.z = (m[2, 1] + m[1, 2]) * num3;
+            q.w = (m[2, 0] - m[0, 2]) * num3;
+
+            return q;
+        }
+        else
+        {
+            float num = Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]);
+            float num2 = .5f / num;
+            
+            q.x = (m[2, 0] + m[0, 2]) * num2;
+            q.y = (m[2, 1] + m[1, 2]) * num2;
+            q.z = .5f * num;
+            q.w = (m[0, 1] - m[1, 0]) * num2;
+        }
+
+        return q;
     }
 
     /// <summary>
     ///   <para>Creates a rotation with the specified forward and upwards directions.</para>
     /// </summary>
     /// <param name="forward">The direction to look in.</param>
-    /// <param name="upwards">The vector that defines in which direction up is.</param>
     public static CustomQuat LookRotation(Vec3 forward) => LookRotation(forward, Vec3.Up);
 
     /// <summary>
@@ -318,20 +370,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="maxDegreesDelta"></param>
     public static CustomQuat RotateTowards(CustomQuat from, CustomQuat to, float maxDegreesDelta)
     {
-        to = Normalize(to);
-        from = Normalize(from);
-
-        if (maxDegreesDelta < 0)
-            to = Inverse(to);
-
-        float angle = Angle(from, to);
-        Mathf.Abs(maxDegreesDelta);
-        maxDegreesDelta = maxDegreesDelta / angle;
-
-        if (angle > 1f - KEpsilon)
-            return to;
-
-        return Slerp(from, to, maxDegreesDelta);
+        return Slerp(from, to, maxDegreesDelta / Angle(from, to) * Mathf.Rad2Deg);
     }
 
     /// <summary>
@@ -400,7 +439,6 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     ///   <para>Creates a rotation with the specified forward and upwards directions.</para>
     /// </summary>
     /// <param name="view">The direction to look in.</param>
-    /// <param name="up">The vector that defines in which direction up is.</param>
     public void SetLookRotation(Vec3 view) => this = LookRotation(view);
 
     /// <summary>

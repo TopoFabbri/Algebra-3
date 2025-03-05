@@ -282,75 +282,63 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     public static CustomQuat LookRotation(Vec3 forward, [DefaultValue("Vec3.up")] Vec3 upwards)
     {
         forward.Normalize();
-        Vec3 right = Vec3.Cross(forward, upwards).normalized;
-        upwards = Vec3.Cross(right, forward);
+        Vec3 right = Vec3.Cross(upwards, forward).normalized;
+        Vec3 u = Vec3.Cross(forward, right);
         
-        float[,] m = new [,]
-        {
-            {right.x, right.y, right.z},
-            {upwards.x, upwards.y, upwards.z},
-            {forward.x, forward.y, forward.z}
-        };
-
-        float diagSum = m[0, 0] + m[1, 1] + m[2, 2];
-        CustomQuat q = new();
-
-        if (diagSum > 0)
-        {
-            float num = Mathf.Sqrt(diagSum + 1f);
-            
-            q.w = .5f * num;
-            q.x = (m[1, 2] - m[2, 1]) * num;
-            q.y = (m[2, 0] - m[0, 2]) * num;
-            q.z = (m[0, 1] - m[1, 0]) * num;
-            
-            return q;
-        }
+        // Build a rotation matrix with r, u, and f as the columns.
+        // The matrix looks like:
+        //
+        //    | r.x   u.x   f.x |
+        //    | r.y   u.y   f.y |
+        //    | r.z   u.z   f.z |
+        //
+        // Now convert that matrix to a quaternion.
+        float m00 = right.x, m01 = u.x, m02 = forward.x;
+        float m10 = right.y, m11 = u.y, m12 = forward.y;
+        float m20 = right.z, m21 = u.z, m22 = forward.z;
         
-        if (m[0, 0] >= m[1, 1] && m[0, 0] >= m[2, 2])
-        {
-            float num = Mathf.Sqrt(1f + m[0, 0] - m[1, 1] - m[2, 2]);
-            float num4 = .5f / num;
-            
-            q.x = 0.5f * num;
-            q.y = (m[0, 1] + m[1, 0]) * num4;
-            q.z = (m[0, 2] + m[2, 0]) * num4;
-            q.w = (m[2, 1] - m[1, 2]) * num4;
-            
-            return q;
-        }
+        // Compute the trace of the matrix.
+        float trace = m00 + m11 + m22;
+        float qw, qx, qy, qz;
         
-        if (m[1, 1] > m[2, 2])
+        if (trace > 0)
         {
-            float num = Mathf.Sqrt(1f + m[1, 1] - m[0, 0] - m[2, 2]);
-            float num3 = .5f / num;
-            
-            q.x = (m[1, 0] + m[0, 1]) * num3;
-            q.y = .5f * num;
-            q.z = (m[2, 1] + m[1, 2]) * num3;
-            q.w = (m[2, 0] - m[0, 2]) * num3;
-
-            return q;
+            float s = 0.5f / MathF.Sqrt(trace + 1.0f);
+            qw = 0.25f / s;
+            qx = (m21 - m12) * s;
+            qy = (m02 - m20) * s;
+            qz = (m10 - m01) * s;
         }
         else
         {
-            float num = Mathf.Sqrt(1f + m[2, 2] - m[0, 0] - m[1, 1]);
-            float num2 = .5f / num;
-            
-            q.x = (m[2, 0] + m[0, 2]) * num2;
-            q.y = (m[2, 1] + m[1, 2]) * num2;
-            q.z = .5f * num;
-            q.w = (m[0, 1] - m[1, 0]) * num2;
+            if (m00 > m11 && m00 > m22)
+            {
+                float s = 2.0f * MathF.Sqrt(1.0f + m00 - m11 - m22);
+                qw = (m21 - m12) / s;
+                qx = 0.25f * s;
+                qy = (m01 + m10) / s;
+                qz = (m02 + m20) / s;
+            }
+            else if (m11 > m22)
+            {
+                float s = 2.0f * MathF.Sqrt(1.0f + m11 - m00 - m22);
+                qw = (m02 - m20) / s;
+                qx = (m01 + m10) / s;
+                qy = 0.25f * s;
+                qz = (m12 + m21) / s;
+            }
+            else
+            {
+                float s = 2.0f * MathF.Sqrt(1.0f + m22 - m00 - m11);
+                qw = (m10 - m01) / s;
+                qx = (m02 + m20) / s;
+                qy = (m12 + m21) / s;
+                qz = 0.25f * s;
+            }
         }
-
-        return q;
+        
+        return new CustomQuat(qx, qy, qz, qw);
     }
-
-    /// <summary>
-    ///   <para>Creates a rotation with the specified forward and upwards directions.</para>
-    /// </summary>
-    /// <param name="forward">The direction to look in.</param>
-    public static CustomQuat LookRotation(Vec3 forward) => LookRotation(forward, Vec3.Up);
 
     /// <summary>
     ///   <para>Converts this quaternion to one with the same orientation but with a magnitude of 1.</para>
@@ -439,14 +427,8 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     ///   <para>Creates a rotation with the specified forward and upwards directions.</para>
     /// </summary>
     /// <param name="view">The direction to look in.</param>
-    public void SetLookRotation(Vec3 view) => this = LookRotation(view);
-
-    /// <summary>
-    ///   <para>Creates a rotation with the specified forward and upwards directions.</para>
-    /// </summary>
-    /// <param name="view">The direction to look in.</param>
     /// <param name="up">The vector that defines in which direction up is.</param>
-    public void SetLookRotation(Vec3 view, [DefaultValue("Vec3.up")] Vec3 up) => this = LookRotation(view, Vec3.Up);
+    public void SetLookRotation(Vec3 view, [DefaultValue("Vec3.up")] Vec3 up) => this = LookRotation(view, up);
 
     #endregion
 
@@ -475,7 +457,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         Vec3 v = point;
         Vec3 res = Vec3.Zero;
 
-        // v = q * q(v) * q*
+        // v = q * q(v) * q* 
 
         CustomQuat qv = new(v.x, v.y, v.z, 0);
         qv = q * qv * Inverse(q);

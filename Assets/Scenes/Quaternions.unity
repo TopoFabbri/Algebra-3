@@ -436,48 +436,48 @@ MonoBehaviour:
     z: -0.17554435
     w: 0.9808145
   q2:
-    x: 0.70710677
-    y: 0
-    z: 0
+    x: 0.18898223
+    y: 0.37796447
+    z: 0.5669467
     w: 0.70710677
-  v: {x: 1, y: 0, z: 0}
+  v: {x: 1, y: 2, z: 3}
   rotationAngle: 90
   lerpValue: 1
   rotateTowardsValue: 100
-  dot: 0.682472
-  euler: {x: 89.98501, y: 0, z: 0}
+  dot: 0.62254983
+  euler: {x: -9.282951, y: 49.353672, z: 73.17163}
   product:
-    x: 0.682472
-    y: -0.065212935
-    z: -0.18304427
-    w: 0.7046092
-  vectorProduct: {x: 0.9244842, y: -0.34696135, z: -0.1579459}
+    x: 0.28787506
+    y: 0.40532857
+    z: 0.41027865
+    w: 0.7645313
+  vectorProduct: {x: 2.1147852, y: 1.5331564, z: 2.6790142}
   normalized:
     x: -0.015653394
     y: 0.083319336
     z: -0.17554435
     w: 0.9808145
-  angle: 93.92577
+  angle: 102.99485
   eulerToQuat:
-    x: 0.008726535
-    y: 0
-    z: 0
-    w: 0.9999619
+    x: 0.00917905
+    y: 0.017217362
+    z: 0.026324213
+    w: 0.999463
   lerp:
-    x: 0.70710677
-    y: 0
-    z: 0
+    x: 0.18898223
+    y: 0.37796447
+    z: 0.5669467
     w: 0.70710677
   rotateTowards:
-    x: 0.70710677
-    y: 0
-    z: 0
+    x: 0.18898223
+    y: 0.37796447
+    z: 0.5669467
     w: 0.70710677
   lookRotation:
-    x: 0.5
-    y: -0.5
-    z: 0.5
-    w: -0.5
+    x: 0.07232954
+    y: 0.30639285
+    z: 0.9237624
+    w: 0.21807073
 --- !u!23 &1074734266
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -535,7 +535,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1074734263}
-  m_LocalRotation: {x: 0.5, y: -0.5, z: 0.5, w: -0.5}
+  m_LocalRotation: {x: 0.07232955, y: 0.30639288, z: 0.92376244, w: 0.21807075}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -581,48 +581,48 @@ MonoBehaviour:
     z: -0.17554435
     w: 0.9808145
   quat2:
-    x: 0.70710677
-    y: 0
-    z: 0
+    x: 0.18898223
+    y: 0.37796447
+    z: 0.5669467
     w: 0.70710677
-  v: {x: 1, y: 0, z: 0}
+  v: {x: 1, y: 2, z: 3}
   rotationAngle: 90
   lerpValue: 1
   rotateTowardsValue: 100
-  dot: 0.682472
-  euler: {x: 90, y: 0, z: 0}
+  dot: 0.62254983
+  euler: {x: 350.71704, y: 49.353676, z: 73.17163}
   product:
-    x: 0.682472
-    y: -0.065212935
-    z: -0.18304427
-    w: 0.7046092
-  vectorProduct: {x: 0.92448413, y: -0.34696135, z: -0.1579459}
+    x: 0.28787506
+    y: 0.40532857
+    z: 0.41027865
+    w: 0.7645313
+  vectorProduct: {x: 2.1147852, y: 1.5331563, z: 2.679014}
   normalized:
     x: -0.015653394
     y: 0.083319336
     z: -0.17554435
     w: 0.9808145
-  angle: 93.92577
+  angle: 102.99485
   eulerToQuat:
-    x: 0.008726535
-    y: 0
-    z: 0
-    w: 0.9999619
+    x: 0.00917905
+    y: 0.01721736
+    z: 0.02601972
+    w: 0.999471
   lerp:
-    x: 0.70710677
-    y: 0
-    z: 0
+    x: 0.18898223
+    y: 0.37796447
+    z: 0.5669467
     w: 0.70710677
   rotateTowards:
-    x: 0.70710677
-    y: 0
-    z: 0
-    w: 0.70710677
+    x: 0.18446639
+    y: 0.3727604
+    z: 0.54910547
+    w: 0.7249173
   lookRotation:
-    x: 0.5
-    y: 0.5
-    z: 0.5
-    w: 0.5
+    x: 0.07232954
+    y: 0.30639288
+    z: 0.92376244
+    w: 0.21807073
 --- !u!23 &1760443003
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -680,7 +680,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1760443000}
-  m_LocalRotation: {x: 0.5, y: 0.5, z: 0.5, w: 0.5}
+  m_LocalRotation: {x: 0.07232954, y: 0.30639288, z: 0.92376244, w: 0.21807073}
   m_LocalPosition: {x: 2.045, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0

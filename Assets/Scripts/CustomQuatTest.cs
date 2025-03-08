@@ -39,8 +39,7 @@ public class CustomQuatTest : MonoBehaviour
         lerp = CustomQuat.SlerpUnclamped(q1, q2, lerpValue);
         rotateTowards = CustomQuat.RotateTowards(q1, q2, rotateTowardsValue);
         lookRotation = CustomQuat.LookRotation(v, Vec3.Forward);
-
-        transform.rotation = lookRotation;
+        
         Draw();
     }
 

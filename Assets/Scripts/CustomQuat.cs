@@ -67,19 +67,34 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     {
         get
         {
-            if (index == 0) return x;
-            if (index == 1) return y;
-            if (index == 2) return z;
-            if (index == 3) return w;
-            throw new IndexOutOfRangeException("Invalid index");
+            return index switch
+            {
+                0 => x,
+                1 => y,
+                2 => z,
+                3 => w,
+                _ => throw new IndexOutOfRangeException("Invalid index")
+            };
         }
         set
         {
-            if (index == 0) x = value;
-            else if (index == 1) y = value;
-            else if (index == 2) z = value;
-            else if (index == 3) w = value;
-            else throw new IndexOutOfRangeException("Invalid index");
+            switch (index)
+            {
+                case 0:
+                    x = value;
+                    break;
+                case 1:
+                    y = value;
+                    break;
+                case 2:
+                    z = value;
+                    break;
+                case 3:
+                    w = value;
+                    break;
+                default:
+                    throw new IndexOutOfRangeException("Invalid index");
+            }
         }
     }
 
@@ -136,7 +151,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     {
         axis.Normalize();
         axis *= Mathf.Sin(angle * .5f * Mathf.Deg2Rad);
-        CustomQuat q = new CustomQuat(axis.x, axis.y, axis.z, Mathf.Cos(angle * .5f * Mathf.Deg2Rad));
+        CustomQuat q = new(axis.x, axis.y, axis.z, Mathf.Cos(angle * .5f * Mathf.Deg2Rad));
 
         return q;
     }
@@ -182,31 +197,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="x"></param>
     /// <param name="y"></param>
     /// <param name="z"></param>
-    public static CustomQuat Euler(float x, float y, float z)
-    {
-        CustomQuat qx = new CustomQuat(
-            Mathf.Sin(x / 2f * Mathf.Deg2Rad),
-            0f,
-            0f,
-            Mathf.Cos(x / 2f * Mathf.Deg2Rad)
-        );
-
-        CustomQuat qy = new CustomQuat(
-            0f,
-            Mathf.Sin(y / 2f * Mathf.Deg2Rad),
-            0f,
-            Mathf.Cos(y / 2f * Mathf.Deg2Rad)
-        );
-
-        CustomQuat qz = new CustomQuat(
-            0f,
-            0f,
-            Mathf.Sin(x / 2f * Mathf.Deg2Rad),
-            Mathf.Cos(x / 2f * Mathf.Deg2Rad)
-        );
-
-        return qx * qy * qz;
-    }
+    public static CustomQuat Euler(float x, float y, float z) => Euler(new Vec3(x, y, z)); 
 
     /// <summary>
     ///   <para>Creates a rotation which rotates from fromDirection to toDirection.</para>
@@ -286,13 +277,11 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         Vec3 u = Vec3.Cross(forward, right);
         
         // Build a rotation matrix with r, u, and f as the columns.
-        // The matrix looks like:
         //
         //    | r.x   u.x   f.x |
         //    | r.y   u.y   f.y |
         //    | r.z   u.z   f.z |
-        //
-        // Now convert that matrix to a quaternion.
+        
         float m00 = right.x, m01 = u.x, m02 = forward.x;
         float m10 = right.y, m11 = u.y, m12 = forward.y;
         float m20 = right.z, m21 = u.z, m22 = forward.z;
@@ -429,7 +418,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="view">The direction to look in.</param>
     /// <param name="up">The vector that defines in which direction up is.</param>
     public void SetLookRotation(Vec3 view, [DefaultValue("Vec3.up")] Vec3 up) => this = LookRotation(view, up);
-
+    
     #endregion
 
     #region Operators
@@ -457,7 +446,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         Vec3 v = point;
         Vec3 res = Vec3.Zero;
 
-        // v = q * q(v) * q* 
+        // v = q * q(v) * q'
 
         CustomQuat qv = new(v.x, v.y, v.z, 0);
         qv = q * qv * Inverse(q);

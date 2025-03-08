@@ -41,7 +41,6 @@ public class QuatTest : MonoBehaviour
         rotateTowards = Quaternion.RotateTowards(q1, q2, rotateTowardsValue);
         lookRotation = Quaternion.LookRotation(v, Vector3.forward);
         
-        transform.rotation = lookRotation;
         Draw();
     }
 

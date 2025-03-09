@@ -4,8 +4,8 @@ public class QuatTest : MonoBehaviour
 {
     [Header("Values:")] 
     [SerializeField] private Transform reference;
-    [SerializeField] private CustomQuat quat1;
-    [SerializeField] private CustomQuat quat2;
+    [SerializeField] private Quat quat1;
+    [SerializeField] private Quat quat2;
     [SerializeField] private Vector3 v;
     [SerializeField] private float rotationAngle;
     [SerializeField] private float lerpValue;
@@ -14,14 +14,14 @@ public class QuatTest : MonoBehaviour
     [Header("Tests:")] 
     [SerializeField] private float dot;
     [SerializeField] private Vector3 euler;
-    [SerializeField] private CustomQuat product;
+    [SerializeField] private Quat product;
     [SerializeField] private Vector3 vectorProduct;
-    [SerializeField] private CustomQuat normalized;
+    [SerializeField] private Quat normalized;
     [SerializeField] private float angle;
-    [SerializeField] private CustomQuat eulerToQuat;
-    [SerializeField] private CustomQuat lerp;
-    [SerializeField] private CustomQuat rotateTowards;
-    [SerializeField] private CustomQuat lookRotation;
+    [SerializeField] private Quat eulerToQuat;
+    [SerializeField] private Quat lerp;
+    [SerializeField] private Quat rotateTowards;
+    [SerializeField] private Quat lookRotation;
 
     private void OnDrawGizmosSelected()
     {

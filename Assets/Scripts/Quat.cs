@@ -4,11 +4,11 @@ using UnityEngine;
 using UnityEngine.Internal;
 
 [Serializable]
-public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
+public struct Quat : IEquatable<Quat>, IFormattable
 {
     public override bool Equals(object obj)
     {
-        return obj is CustomQuat other && Equals(other);
+        return obj is Quat other && Equals(other);
     }
 
     #region Variables
@@ -46,7 +46,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="y"></param>
     /// <param name="z"></param>
     /// <param name="w"></param>
-    public CustomQuat(float x, float y, float z, float w)
+    public Quat(float x, float y, float z, float w)
     {
         this.x = x;
         this.y = y;
@@ -101,7 +101,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <summary>
     ///   <para>The identity rotation (Read Only).</para>
     /// </summary>
-    public static CustomQuat Identity => new(0f, 0f, 0f, 1f);
+    public static Quat Identity => new(0f, 0f, 0f, 1f);
 
     /// <summary>
     ///   <para>Returns or sets the euler angle representation of the rotation.</para>
@@ -125,7 +125,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <summary>
     ///   <para>Returns this quaternion with a magnitude of 1 (Read Only).</para>
     /// </summary>
-    public CustomQuat Normalized => Normalize(new CustomQuat(x, y, z, w));
+    public Quat Normalized => Normalize(new Quat(x, y, z, w));
 
     #endregion
 
@@ -136,7 +136,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// </summary>
     /// <param name="a"></param>
     /// <param name="b"></param>
-    public static float Angle(CustomQuat a, CustomQuat b)
+    public static float Angle(Quat a, Quat b)
     {
         float dot = Mathf.Abs(Dot(a, b));
         return Mathf.Acos(dot) * 2f * Mathf.Rad2Deg;
@@ -147,11 +147,11 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// </summary>
     /// <param name="angle"></param>
     /// <param name="axis"></param>
-    public static CustomQuat AngleAxis(float angle, Vec3 axis)
+    public static Quat AngleAxis(float angle, Vec3 axis)
     {
         axis.Normalize();
         axis *= Mathf.Sin(angle * .5f * Mathf.Deg2Rad);
-        CustomQuat q = new(axis.x, axis.y, axis.z, Mathf.Cos(angle * .5f * Mathf.Deg2Rad));
+        Quat q = new(axis.x, axis.y, axis.z, Mathf.Cos(angle * .5f * Mathf.Deg2Rad));
 
         return q;
     }
@@ -161,7 +161,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// </summary>
     /// <param name="a"></param>
     /// <param name="b"></param>
-    public static float Dot(CustomQuat a, CustomQuat b)
+    public static float Dot(Quat a, Quat b)
     {
         return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
     }
@@ -170,7 +170,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     ///   <para>Returns a rotation that rotates z degrees around the z axis, x degrees around the x axis, and y degrees around the y axis.</para>
     /// </summary>
     /// <param name="euler"></param>
-    public static CustomQuat Euler(Vec3 euler)
+    public static Quat Euler(Vec3 euler)
     {
         float xRad = euler.x * Mathf.Deg2Rad;
         float yRad = euler.y * Mathf.Deg2Rad;
@@ -183,7 +183,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         float sY = Mathf.Sin(yRad / 2f);
         float sZ = Mathf.Sin(zRad / 2f);
 
-        return new CustomQuat(
+        return new Quat(
             sX * cY * cZ + cX * sY * sZ,
             cX * sY * cZ - sX * cY * sZ,
             cX * cY * sZ + sX * sY * cZ,
@@ -197,17 +197,17 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="x"></param>
     /// <param name="y"></param>
     /// <param name="z"></param>
-    public static CustomQuat Euler(float x, float y, float z) => Euler(new Vec3(x, y, z)); 
+    public static Quat Euler(float x, float y, float z) => Euler(new Vec3(x, y, z)); 
 
     /// <summary>
     ///   <para>Creates a rotation which rotates from fromDirection to toDirection.</para>
     /// </summary>
     /// <param name="fromDirection"></param>
     /// <param name="toDirection"></param>
-    public static CustomQuat FromToRotation(Vec3 fromDirection, Vec3 toDirection)
+    public static Quat FromToRotation(Vec3 fromDirection, Vec3 toDirection)
     {
         Vec3 axis = Vec3.Cross(fromDirection, toDirection);
-        CustomQuat rotation = AngleAxis(Vec3.Angle(fromDirection, toDirection), axis);
+        Quat rotation = AngleAxis(Vec3.Angle(fromDirection, toDirection), axis);
 
         return rotation;
     }
@@ -216,9 +216,9 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     ///   <para>Returns the Inverse of rotation.</para>
     /// </summary>
     /// <param name="rotation"></param>
-    public static CustomQuat Inverse(CustomQuat rotation)
+    public static Quat Inverse(Quat rotation)
     {
-        return new CustomQuat(-rotation.x, -rotation.y, -rotation.z, rotation.w);
+        return new Quat(-rotation.x, -rotation.y, -rotation.z, rotation.w);
     }
 
     /// <summary>
@@ -230,7 +230,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <returns>
     ///   <para>A quaternion interpolated between quaternions a and b.</para>
     /// </returns>
-    public static CustomQuat Lerp(CustomQuat a, CustomQuat b, float t)
+    public static Quat Lerp(Quat a, Quat b, float t)
     {
         t = Mathf.Clamp01(t);
         return LerpUnclamped(a, b, t);
@@ -242,10 +242,10 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <param name="t"></param>
-    public static CustomQuat LerpUnclamped(CustomQuat a, CustomQuat b, float t)
+    public static Quat LerpUnclamped(Quat a, Quat b, float t)
     {
         float tNeg = 1f - t;
-        CustomQuat res;
+        Quat res;
 
         if (Dot(a, b) > 0f)
         {
@@ -270,7 +270,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// </summary>
     /// <param name="forward">The direction to look in.</param>
     /// <param name="upwards">The vector that defines in which direction up is.</param>
-    public static CustomQuat LookRotation(Vec3 forward, [DefaultValue("Vec3.up")] Vec3 upwards)
+    public static Quat LookRotation(Vec3 forward, [DefaultValue("Vec3.up")] Vec3 upwards)
     {
         forward.Normalize();
         Vec3 right = Vec3.Cross(upwards, forward).normalized;
@@ -326,17 +326,17 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
             }
         }
         
-        return new CustomQuat(qx, qy, qz, qw);
+        return new Quat(qx, qy, qz, qw);
     }
 
     /// <summary>
     ///   <para>Converts this quaternion to one with the same orientation but with a magnitude of 1.</para>
     /// </summary>
     /// <param name="q"></param>
-    public static CustomQuat Normalize(CustomQuat q)
+    public static Quat Normalize(Quat q)
     {
         float length = Mathf.Abs(Mathf.Sqrt(q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z));
-        return new CustomQuat(q.x / length, q.y / length, q.z / length, q.w / length);
+        return new Quat(q.x / length, q.y / length, q.z / length, q.w / length);
     }
 
     /// <summary>
@@ -345,7 +345,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="from"></param>
     /// <param name="to"></param>
     /// <param name="maxDegreesDelta"></param>
-    public static CustomQuat RotateTowards(CustomQuat from, CustomQuat to, float maxDegreesDelta)
+    public static Quat RotateTowards(Quat from, Quat to, float maxDegreesDelta)
     {
         return Slerp(from, to, maxDegreesDelta / Angle(from, to) * Mathf.Rad2Deg);
     }
@@ -359,7 +359,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <returns>
     ///   <para>A quaternion spherically interpolated between quaternions a and b.</para>
     /// </returns>
-    public static CustomQuat Slerp(CustomQuat a, CustomQuat b, float t)
+    public static Quat Slerp(Quat a, Quat b, float t)
     {
         t = Mathf.Clamp01(t);
         return SlerpUnclamped(a, b, t);
@@ -371,7 +371,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <param name="t"></param>
-    public static CustomQuat SlerpUnclamped(CustomQuat a, CustomQuat b, float t)
+    public static Quat SlerpUnclamped(Quat a, Quat b, float t)
     {
         float angle = Angle(a, b);
 
@@ -379,7 +379,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         float s1 = (float)Math.Sin(tNeg * angle) * (1f / Mathf.Sin(angle));
         float s2 = (float)Math.Sin(t * angle) * (1f / Mathf.Sin(angle));
 
-        CustomQuat ans;
+        Quat ans;
 
         ans.x = s1 * a.x + s2 * b.x;
         ans.y = s1 * a.y + s2 * b.y;
@@ -423,7 +423,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
 
     #region Operators
 
-    public static CustomQuat operator *(CustomQuat q1, CustomQuat q2)
+    public static Quat operator *(Quat q1, Quat q2)
     {
         /*
         (q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z) + -> w
@@ -432,7 +432,7 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         (q1w * q2z + q1x * q2y - q1y * q2x + q1z * q2w)k -> z
         */
 
-        return new CustomQuat(
+        return new Quat(
             q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
             q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,
             q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w,
@@ -440,34 +440,34 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         );
     }
 
-    public static Vec3 operator *(CustomQuat rotation, Vec3 point)
+    public static Vec3 operator *(Quat rotation, Vec3 point)
     {
-        CustomQuat q = rotation;
+        Quat q = rotation;
         Vec3 v = point;
         Vec3 res = Vec3.Zero;
 
         // v = q * q(v) * q'
 
-        CustomQuat qv = new(v.x, v.y, v.z, 0);
+        Quat qv = new(v.x, v.y, v.z, 0);
         qv = q * qv * Inverse(q);
         res = new Vec3(qv.x, qv.y, qv.z);
 
         return res;
     }
 
-    public static bool operator ==(CustomQuat lhs, CustomQuat rhs)
+    public static bool operator ==(Quat lhs, Quat rhs)
     {
-        return Dot(new CustomQuat(lhs.x, lhs.y, lhs.z, lhs.w), rhs) > 1f - KEpsilon;
+        return Dot(new Quat(lhs.x, lhs.y, lhs.z, lhs.w), rhs) > 1f - KEpsilon;
     }
 
-    public static bool operator !=(CustomQuat lhs, CustomQuat rhs) => !(lhs == rhs);
+    public static bool operator !=(Quat lhs, Quat rhs) => !(lhs == rhs);
 
-    public static implicit operator CustomQuat(Quaternion q)
+    public static implicit operator Quat(Quaternion q)
     {
-        return new CustomQuat(q.x, q.y, q.z, q.w);
+        return new Quat(q.x, q.y, q.z, q.w);
     }
 
-    public static implicit operator Quaternion(CustomQuat q)
+    public static implicit operator Quaternion(Quat q)
     {
         return new Quaternion(q.x, q.y, q.z, q.w);
     }
@@ -486,9 +486,9 @@ public struct CustomQuat : IEquatable<CustomQuat>, IFormattable
         return $"({w}, {x}, {y}, {z})";
     }
 
-    public bool Equals(CustomQuat other)
+    public bool Equals(Quat other)
     {
-        return new CustomQuat(x, y, z, w) == other;
+        return new Quat(x, y, z, w) == other;
     }
 
     public override int GetHashCode()

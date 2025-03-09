@@ -3,7 +3,8 @@ using System.Text;
 using CustomMath;
 using UnityEngine;
 
-public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
+[Serializable]
+public struct Mat4x4 : IEquatable<Mat4x4>, IFormattable
 {
     #region Variables
 
@@ -28,7 +29,7 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
 
     #region Constructor
 
-    public CustomMatrix(Vector4 column0, Vector4 column1, Vector4 column2, Vector4 column3)
+    public Mat4x4(Vector4 column0, Vector4 column1, Vector4 column2, Vector4 column3)
     {
         m00 = column0.x;
         m10 = column0.y;
@@ -54,13 +55,6 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
     #endregion
 
     #region Properties
-
-    public float this[int row, int column]
-    {
-        get => this[row + column * 4];
-
-        set => this[row + column * 4] = value;
-    }
 
     public float this[int index]
     {
@@ -145,29 +139,103 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
         }
     }
 
-    public static CustomMatrix zero => new CustomMatrix(
+    public float this[int row, int column]
+    {
+        get => this[row + column * 4];
+
+        set => this[row + column * 4] = value;
+    }
+
+    public static Mat4x4 zero => new(
         new Vector4(0, 0, 0, 0),
         new Vector4(0, 0, 0, 0),
         new Vector4(0, 0, 0, 0),
         new Vector4(0, 0, 0, 0)
     );
 
-    public static CustomMatrix identity => new CustomMatrix(
+    public static Mat4x4 identity => new(
         new Vector4(1f, 0f, 0f, 0f),
         new Vector4(0f, 1f, 0f, 0f),
         new Vector4(0f, 0f, 1f, 0f),
         new Vector4(0f, 0f, 0f, 1f)
     );
 
-    public float determinant => Determinant(this);
+    public Quat Rotation => GetRotation();
 
-    public CustomMatrix transpose => Transpose(this);
+    public Vec3 LossyScale => GetLossyScale();
 
-    #endregion 
+    public bool IsIdentity => this == identity;
+
+    public float Determinant => GetDeterminant(this);
+
+    public Mat4x4 Transpose => GetTranspose(this);
+
+    #endregion
 
     #region Functions
 
-    public static float Determinant(CustomMatrix m)
+    private Quat GetRotation()
+    {
+        float trace = m00 + m11 + m22;
+
+        float qw, qx, qy, qz;
+
+        if (trace > 0)
+        {
+            float s = 0.5f / Mathf.Sqrt(trace + 1.0f);
+            qw = 0.25f / s;
+            qx = (m21 - m12) * s;
+            qy = (m02 - m20) * s;
+            qz = (m10 - m01) * s;
+        }
+        else
+        {
+            if (m00 > m11 && m00 > m22)
+            {
+                float s = 2.0f * Mathf.Sqrt(1.0f + m00 - m11 - m22);
+                qw = (m21 - m12) / s;
+                qx = 0.25f * s;
+                qy = (m01 + m10) / s;
+                qz = (m02 + m20) / s;
+            }
+            else if (m11 > m22)
+            {
+                float s = 2.0f * Mathf.Sqrt(1.0f + m11 - m00 - m22);
+                qw = (m02 - m20) / s;
+                qx = (m01 + m10) / s;
+                qy = 0.25f * s;
+                qz = (m12 + m21) / s;
+            }
+            else
+            {
+                float s = 2.0f * Mathf.Sqrt(1.0f + m22 - m00 - m11);
+                qw = (m10 - m01) / s;
+                qx = (m02 + m20) / s;
+                qy = (m12 + m21) / s;
+                qz = 0.25f * s;
+            }
+        }
+
+        return new Quat(qx, qy, qz, qw);
+    }
+
+    public Vector3 GetLossyScale()
+    {
+        // Extract the basis vectors from the matrix
+        Vector3 scaleX = new(m00, m10, m20);
+        Vector3 scaleY = new(m01, m11, m21);
+        Vector3 scaleZ = new(m02, m12, m22);
+
+        // Compute the magnitudes (lengths) of the basis vectors
+        float scaleXLength = scaleX.magnitude;
+        float scaleYLength = scaleY.magnitude;
+        float scaleZLength = scaleZ.magnitude;
+
+        // Return the scale as a Vector3
+        return new Vector3(scaleXLength, scaleYLength, scaleZLength);
+    }
+
+    public static float GetDeterminant(Mat4x4 m)
     {
         float det1 = m.m00 * (m.m11 * m.m22 * m.m33 + m.m12 * m.m23 * m.m31 + m.m13 * m.m21 * m.m32
                               - m.m13 * m.m22 * m.m31 - m.m12 * m.m21 * m.m33 - m.m11 * m.m23 * m.m32);
@@ -184,15 +252,65 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
         return det1 - det2 + det3 - det4;
     }
 
-    public static CustomMatrix Rotate(CustomQuat q)
+    public static Mat4x4 Inverse(Mat4x4 m)
+    {
+        float determinant = m.Determinant;
+
+        if (Mathf.Abs(determinant) < Mathf.Epsilon)
+            throw new InvalidOperationException("Matrix is not invertible.");
+
+        Mat4x4 inv = new()
+        {
+            // Calculate the inverse matrix using adjoint method
+            m00 = m.m11 * m.m22 * m.m33 - m.m11 * m.m23 * m.m32 - m.m21 * m.m12 * m.m33 + m.m21 * m.m13 * m.m32 +
+                m.m31 * m.m12 * m.m23 - m.m31 * m.m13 * m.m22,
+            m01 = -m.m01 * m.m22 * m.m33 + m.m01 * m.m23 * m.m32 + m.m21 * m.m02 * m.m33 - m.m21 * m.m03 * m.m32 -
+                m.m31 * m.m02 * m.m23 + m.m31 * m.m03 * m.m22,
+            m02 = m.m01 * m.m12 * m.m33 - m.m01 * m.m13 * m.m32 - m.m11 * m.m02 * m.m33 + m.m11 * m.m03 * m.m32 +
+                m.m31 * m.m02 * m.m13 - m.m31 * m.m03 * m.m12,
+            m03 = -m.m01 * m.m12 * m.m23 + m.m01 * m.m13 * m.m22 + m.m11 * m.m02 * m.m23 - m.m11 * m.m03 * m.m22 -
+                m.m21 * m.m02 * m.m13 + m.m21 * m.m03 * m.m12,
+            
+                m10 = -m.m10 * m.m22 * m.m33 + m.m10 * m.m23 * m.m32 + m.m20 * m.m12 * m.m33 - m.m20 * m.m13 * m.m32 -
+                m.m30 * m.m12 * m.m23 + m.m30 * m.m13 * m.m22,
+            m11 = m.m00 * m.m22 * m.m33 - m.m00 * m.m23 * m.m32 - m.m20 * m.m02 * m.m33 + m.m20 * m.m03 * m.m32 +
+                m.m30 * m.m02 * m.m23 - m.m30 * m.m03 * m.m22,
+            m12 = -m.m00 * m.m12 * m.m33 + m.m00 * m.m13 * m.m32 + m.m10 * m.m02 * m.m33 - m.m10 * m.m03 * m.m32 -
+                m.m30 * m.m02 * m.m13 + m.m30 * m.m03 * m.m12,
+            m13 = m.m00 * m.m12 * m.m23 - m.m00 * m.m13 * m.m22 - m.m10 * m.m02 * m.m23 + m.m10 * m.m03 * m.m22 +
+                m.m20 * m.m02 * m.m13 - m.m20 * m.m03 * m.m12,
+            
+                m20 = m.m10 * m.m21 * m.m33 - m.m10 * m.m23 * m.m31 - m.m20 * m.m11 * m.m33 + m.m20 * m.m13 * m.m31 +
+                m.m30 * m.m11 * m.m23 - m.m30 * m.m13 * m.m21,
+            m21 = -m.m00 * m.m21 * m.m33 + m.m00 * m.m23 * m.m31 + m.m20 * m.m01 * m.m33 - m.m20 * m.m03 * m.m31 -
+                m.m30 * m.m01 * m.m23 + m.m30 * m.m03 * m.m21,
+            m22 = m.m00 * m.m11 * m.m33 - m.m00 * m.m13 * m.m31 - m.m10 * m.m01 * m.m33 + m.m10 * m.m03 * m.m31 +
+                m.m30 * m.m01 * m.m13 - m.m30 * m.m03 * m.m11,
+            m23 = -m.m00 * m.m11 * m.m23 + m.m00 * m.m13 * m.m21 + m.m10 * m.m01 * m.m23 - m.m10 * m.m03 * m.m21 -
+                m.m20 * m.m01 * m.m13 + m.m20 * m.m03 * m.m11,
+            
+                m30 = -m.m10 * m.m21 * m.m32 + m.m10 * m.m22 * m.m31 + m.m20 * m.m11 * m.m32 - m.m20 * m.m12 * m.m31 -
+                m.m30 * m.m11 * m.m22 + m.m30 * m.m12 * m.m21,
+            m31 = m.m00 * m.m21 * m.m32 - m.m00 * m.m22 * m.m31 - m.m20 * m.m01 * m.m32 + m.m20 * m.m02 * m.m31 +
+                m.m30 * m.m01 * m.m22 - m.m30 * m.m02 * m.m21,
+            m32 = -m.m00 * m.m11 * m.m32 + m.m00 * m.m12 * m.m31 + m.m10 * m.m01 * m.m32 - m.m10 * m.m02 * m.m31 -
+                m.m30 * m.m01 * m.m12 + m.m30 * m.m02 * m.m11,
+            m33 = m.m00 * m.m11 * m.m22 - m.m00 * m.m12 * m.m21 - m.m10 * m.m01 * m.m22 + m.m10 * m.m02 * m.m21 +
+                m.m20 * m.m01 * m.m12 - m.m20 * m.m02 * m.m11
+        };
+
+        return inv;
+    }
+    
+    public static Mat4x4 Rotate(Quat q)
     {
         float x = q.EulerAngles.x;
         float y = q.EulerAngles.y;
         float z = q.EulerAngles.z;
 
-        CustomMatrix mX = identity;
-        CustomMatrix mY = identity;
-        CustomMatrix mZ = identity;
+        Mat4x4 mX = identity;
+        Mat4x4 mY = identity;
+        Mat4x4 mZ = identity;
 
         mX.m11 = Mathf.Cos(x);
         mX.m12 = -Mathf.Sin(x);
@@ -212,9 +330,9 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
         return mZ * mX * mY;
     }
 
-    public static CustomMatrix Scale(Vec3 vector)
+    public static Mat4x4 Scale(Vec3 vector)
     {
-        CustomMatrix m = identity;
+        Mat4x4 m = identity;
 
         m.m00 = vector.x;
         m.m11 = vector.y;
@@ -223,9 +341,9 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
         return m;
     }
 
-    public static CustomMatrix Translate(Vec3 vector)
+    public static Mat4x4 Translate(Vec3 vector)
     {
-        CustomMatrix m = identity;
+        Mat4x4 m = identity;
 
         m.m03 = vector.x;
         m.m13 = vector.y;
@@ -234,23 +352,23 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
         return m;
     }
 
-    public static CustomMatrix Transpose(CustomMatrix m)
+    public static Mat4x4 GetTranspose(Mat4x4 m)
     {
         Vector4 line1 = new Vector4(m.m00, m.m01, m.m02, m.m03);
         Vector4 line2 = new Vector4(m.m10, m.m11, m.m12, m.m13);
         Vector4 line3 = new Vector4(m.m20, m.m21, m.m22, m.m23);
         Vector4 line4 = new Vector4(m.m30, m.m31, m.m32, m.m33);
 
-        return new CustomMatrix(line1, line2, line3, line4);
+        return new Mat4x4(line1, line2, line3, line4);
     }
 
-    public static CustomMatrix TRS(Vector3 pos, CustomQuat q, Vector3 s)
+    public static Mat4x4 TRS(Vector3 pos, Quat q, Vector3 s)
     {
-        CustomMatrix translation = Translate(pos);
-        CustomMatrix rotation = Rotate(q);
-        CustomMatrix scale = Scale(s);
+        Mat4x4 translation = Translate(pos);
+        Mat4x4 rotation = Rotate(q);
+        Mat4x4 scale = Scale(s);
 
-        CustomMatrix result = translation * rotation * scale;
+        Mat4x4 result = translation * rotation * scale;
 
         return result;
     }
@@ -292,7 +410,7 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
     {
         if (!ValidTRS())
             return MultiplyPoint(point);
-        
+
         Vec3 res;
 
         res.x = m00 * point.x + m01 * point.y + m02 * point.z + m03;
@@ -356,9 +474,9 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
 
     #region Operators
 
-    public static CustomMatrix operator *(CustomMatrix lhs, CustomMatrix rhs)
+    public static Mat4x4 operator *(Mat4x4 lhs, Mat4x4 rhs)
     {
-        CustomMatrix res = new CustomMatrix();
+        Mat4x4 res = new Mat4x4();
         res.m00 = lhs.m00 * rhs.m00 + lhs.m01 * rhs.m10 + lhs.m02 * rhs.m20 + lhs.m03 * rhs.m30;
         res.m01 = lhs.m00 * rhs.m01 + lhs.m01 * rhs.m11 + lhs.m02 * rhs.m21 + lhs.m03 * rhs.m31;
         res.m02 = lhs.m00 * rhs.m02 + lhs.m01 * rhs.m12 + lhs.m02 * rhs.m22 + lhs.m03 * rhs.m32;
@@ -382,7 +500,7 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
         return res;
     }
 
-    public static Vector4 operator *(CustomMatrix lhs, Vector4 vector)
+    public static Vector4 operator *(Mat4x4 lhs, Vector4 vector)
     {
         Vector4 res = Vector4.zero;
 
@@ -394,7 +512,7 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
         return res;
     }
 
-    public static bool operator ==(CustomMatrix lhs, CustomMatrix rhs)
+    public static bool operator ==(Mat4x4 lhs, Mat4x4 rhs)
     {
         return lhs.m00 == rhs.m00 && lhs.m01 == rhs.m01 && lhs.m02 == rhs.m02 && lhs.m03 == rhs.m03 &&
                lhs.m10 == rhs.m10 && lhs.m11 == rhs.m11 && lhs.m12 == rhs.m12 && lhs.m13 == rhs.m13 &&
@@ -402,16 +520,62 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
                lhs.m30 == rhs.m30 && lhs.m31 == rhs.m31 && lhs.m32 == rhs.m32 && lhs.m33 == rhs.m33;
     }
 
-    public static bool operator !=(CustomMatrix lhs, CustomMatrix rhs)
+    public static bool operator !=(Mat4x4 lhs, Mat4x4 rhs)
     {
         return !(lhs == rhs);
+    }
+
+    public static implicit operator Mat4x4(Matrix4x4 mat)
+    {
+        return new Mat4x4
+        {
+            m00 = mat.m00,
+            m01 = mat.m01,
+            m02 = mat.m02,
+            m03 = mat.m03,
+            m10 = mat.m10,
+            m11 = mat.m11,
+            m12 = mat.m12,
+            m13 = mat.m13,
+            m20 = mat.m20,
+            m21 = mat.m21,
+            m22 = mat.m22,
+            m23 = mat.m23,
+            m30 = mat.m30,
+            m31 = mat.m31,
+            m32 = mat.m32,
+            m33 = mat.m33
+        };
+    }
+
+    public static implicit operator Matrix4x4(Mat4x4 mat)
+    {
+        return new Matrix4x4
+        {
+            m00 = mat.m00,
+            m01 = mat.m01,
+            m02 = mat.m02,
+            m03 = mat.m03,
+            m10 = mat.m10,
+            m11 = mat.m11,
+            m12 = mat.m12,
+            m13 = mat.m13,
+            m20 = mat.m20,
+            m21 = mat.m21,
+            m22 = mat.m22,
+            m23 = mat.m23,
+            m30 = mat.m30,
+            m31 = mat.m31,
+            m32 = mat.m32,
+            m33 = mat.m33
+        };
     }
 
     #endregion
 
     #region Other methods
 
-    public bool Equals(CustomMatrix other)
+    public bool Equals(Mat4x4 other)
     {
         return this == other;
     }
@@ -430,6 +594,33 @@ public struct CustomMatrix : IEquatable<CustomMatrix>, IFormattable
             $"{m30.ToString(format, formatProvider)} {m31.ToString(format, formatProvider)} {m32.ToString(format, formatProvider)} {m33.ToString(format, formatProvider)}");
 
         return sb.ToString();
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is Mat4x4 other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        HashCode hashCode = new HashCode();
+        hashCode.Add(m00);
+        hashCode.Add(m10);
+        hashCode.Add(m20);
+        hashCode.Add(m30);
+        hashCode.Add(m01);
+        hashCode.Add(m11);
+        hashCode.Add(m21);
+        hashCode.Add(m31);
+        hashCode.Add(m02);
+        hashCode.Add(m12);
+        hashCode.Add(m22);
+        hashCode.Add(m32);
+        hashCode.Add(m03);
+        hashCode.Add(m13);
+        hashCode.Add(m23);
+        hashCode.Add(m33);
+        return hashCode.ToHashCode();
     }
 
     #endregion

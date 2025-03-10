@@ -8,22 +8,10 @@ public struct Mat4x4 : IEquatable<Mat4x4>, IFormattable
 {
     #region Variables
 
-    public float m00;
-    public float m10;
-    public float m20;
-    public float m30;
-    public float m01;
-    public float m11;
-    public float m21;
-    public float m31;
-    public float m02;
-    public float m12;
-    public float m22;
-    public float m32;
-    public float m03;
-    public float m13;
-    public float m23;
-    public float m33;
+    public float m00, m01, m02, m03;
+    public float m10, m11, m12, m13;
+    public float m20, m21, m22, m23;
+    public float m30, m31, m32, m33;
 
     #endregion
 
@@ -259,9 +247,8 @@ public struct Mat4x4 : IEquatable<Mat4x4>, IFormattable
         if (Mathf.Abs(determinant) < Mathf.Epsilon)
             throw new InvalidOperationException("Matrix is not invertible.");
 
-        Mat4x4 inv = new()
+        Mat4x4 cofactors = new()
         {
-            // Calculate the inverse matrix using adjoint method
             m00 = m.m11 * m.m22 * m.m33 - m.m11 * m.m23 * m.m32 - m.m21 * m.m12 * m.m33 + m.m21 * m.m13 * m.m32 +
                 m.m31 * m.m12 * m.m23 - m.m31 * m.m13 * m.m22,
             m01 = -m.m01 * m.m22 * m.m33 + m.m01 * m.m23 * m.m32 + m.m21 * m.m02 * m.m33 - m.m21 * m.m03 * m.m32 -
@@ -270,8 +257,8 @@ public struct Mat4x4 : IEquatable<Mat4x4>, IFormattable
                 m.m31 * m.m02 * m.m13 - m.m31 * m.m03 * m.m12,
             m03 = -m.m01 * m.m12 * m.m23 + m.m01 * m.m13 * m.m22 + m.m11 * m.m02 * m.m23 - m.m11 * m.m03 * m.m22 -
                 m.m21 * m.m02 * m.m13 + m.m21 * m.m03 * m.m12,
-            
-                m10 = -m.m10 * m.m22 * m.m33 + m.m10 * m.m23 * m.m32 + m.m20 * m.m12 * m.m33 - m.m20 * m.m13 * m.m32 -
+
+            m10 = -m.m10 * m.m22 * m.m33 + m.m10 * m.m23 * m.m32 + m.m20 * m.m12 * m.m33 - m.m20 * m.m13 * m.m32 -
                 m.m30 * m.m12 * m.m23 + m.m30 * m.m13 * m.m22,
             m11 = m.m00 * m.m22 * m.m33 - m.m00 * m.m23 * m.m32 - m.m20 * m.m02 * m.m33 + m.m20 * m.m03 * m.m32 +
                 m.m30 * m.m02 * m.m23 - m.m30 * m.m03 * m.m22,
@@ -279,8 +266,8 @@ public struct Mat4x4 : IEquatable<Mat4x4>, IFormattable
                 m.m30 * m.m02 * m.m13 + m.m30 * m.m03 * m.m12,
             m13 = m.m00 * m.m12 * m.m23 - m.m00 * m.m13 * m.m22 - m.m10 * m.m02 * m.m23 + m.m10 * m.m03 * m.m22 +
                 m.m20 * m.m02 * m.m13 - m.m20 * m.m03 * m.m12,
-            
-                m20 = m.m10 * m.m21 * m.m33 - m.m10 * m.m23 * m.m31 - m.m20 * m.m11 * m.m33 + m.m20 * m.m13 * m.m31 +
+
+            m20 = m.m10 * m.m21 * m.m33 - m.m10 * m.m23 * m.m31 - m.m20 * m.m11 * m.m33 + m.m20 * m.m13 * m.m31 +
                 m.m30 * m.m11 * m.m23 - m.m30 * m.m13 * m.m21,
             m21 = -m.m00 * m.m21 * m.m33 + m.m00 * m.m23 * m.m31 + m.m20 * m.m01 * m.m33 - m.m20 * m.m03 * m.m31 -
                 m.m30 * m.m01 * m.m23 + m.m30 * m.m03 * m.m21,
@@ -288,8 +275,8 @@ public struct Mat4x4 : IEquatable<Mat4x4>, IFormattable
                 m.m30 * m.m01 * m.m13 - m.m30 * m.m03 * m.m11,
             m23 = -m.m00 * m.m11 * m.m23 + m.m00 * m.m13 * m.m21 + m.m10 * m.m01 * m.m23 - m.m10 * m.m03 * m.m21 -
                 m.m20 * m.m01 * m.m13 + m.m20 * m.m03 * m.m11,
-            
-                m30 = -m.m10 * m.m21 * m.m32 + m.m10 * m.m22 * m.m31 + m.m20 * m.m11 * m.m32 - m.m20 * m.m12 * m.m31 -
+
+            m30 = -m.m10 * m.m21 * m.m32 + m.m10 * m.m22 * m.m31 + m.m20 * m.m11 * m.m32 - m.m20 * m.m12 * m.m31 -
                 m.m30 * m.m11 * m.m22 + m.m30 * m.m12 * m.m21,
             m31 = m.m00 * m.m21 * m.m32 - m.m00 * m.m22 * m.m31 - m.m20 * m.m01 * m.m32 + m.m20 * m.m02 * m.m31 +
                 m.m30 * m.m01 * m.m22 - m.m30 * m.m02 * m.m21,
@@ -299,35 +286,46 @@ public struct Mat4x4 : IEquatable<Mat4x4>, IFormattable
                 m.m20 * m.m01 * m.m12 - m.m20 * m.m02 * m.m11
         };
 
-        return inv;
+        // Transpose the cofactor matrix to get the adjugate matrix
+        Mat4x4 inverse = cofactors.Transpose;
+
+        return inverse;
     }
-    
+
     public static Mat4x4 Rotate(Quat q)
     {
-        float x = q.EulerAngles.x;
-        float y = q.EulerAngles.y;
-        float z = q.EulerAngles.z;
+        // Extract Euler angles from quaternion
+        Vector3 euler = q.EulerAngles;
+        
+        float x = euler.x * Mathf.Deg2Rad;
+        float y = euler.y * Mathf.Deg2Rad;
+        float z = euler.z * Mathf.Deg2Rad;
 
+        // Create identity matrices
         Mat4x4 mX = identity;
         Mat4x4 mY = identity;
         Mat4x4 mZ = identity;
 
+        // Rotation matrix around the X-axis
         mX.m11 = Mathf.Cos(x);
         mX.m12 = -Mathf.Sin(x);
         mX.m21 = Mathf.Sin(x);
         mX.m22 = Mathf.Cos(x);
 
+        // Rotation matrix around the Y-axis
         mY.m00 = Mathf.Cos(y);
         mY.m02 = Mathf.Sin(y);
         mY.m20 = -Mathf.Sin(y);
         mY.m22 = Mathf.Cos(y);
 
+        // Rotation matrix around the Z-axis
         mZ.m00 = Mathf.Cos(z);
         mZ.m01 = -Mathf.Sin(z);
         mZ.m10 = Mathf.Sin(z);
         mZ.m11 = Mathf.Cos(z);
 
-        return mZ * mX * mY;
+        // Combine the rotation matrices
+        return mZ * mY * mX;
     }
 
     public static Mat4x4 Scale(Vec3 vector)
